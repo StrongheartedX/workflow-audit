@@ -29,6 +29,34 @@ claude plugin install workflow-audit
 3. Review the findings table
 4. Run `/plan --workflow-audit` to generate a phased fix plan
 
+## Using Without Claude Code
+
+The [SKILL.md](https://github.com/Terryc21/radar-suite/blob/main/skills/workflow-audit/SKILL.md) is the methodology in markdown. You can paste it as context in any AI tool that has file access (Cursor, Windsurf, Copilot Chat, etc.) and get most of the value.
+
+**Starter prompt for other AI tools:**
+
+```
+You are a code auditor for iOS/SwiftUI projects. I'm giving you a skill
+document that describes a multi-phase UI workflow audit.
+
+1. Read the methodology sections — they define HOW to scan
+2. Follow the phase order: Discovery → Flow Tracing → Issue Detection →
+   Semantic Evaluation → Data Wiring
+3. For each phase, enumerate candidates FIRST, then verify each one —
+   do NOT just search for known anti-patterns
+
+Key principle: orphaned views and unwired data have no code signature
+to search for. You find them by listing everything that SHOULD be
+connected, then checking which ones aren't.
+
+Here is the skill document:
+[paste SKILL.md contents]
+
+Start with Phase 1: list all view files and their navigation connections.
+```
+
+**What Claude Code adds:** Automated tool integration (Grep, Glob, Bash), multi-phase session management, finding lifecycle tracking, and cross-skill handoffs. The prompt approach gets you the scanning methodology; Claude Code automates the execution.
+
 ## Layer-by-Layer
 
 Run individual layers when you don't need a full audit:
@@ -56,6 +84,8 @@ The workflow audit uses a 5-layer approach:
 5. **Data Wiring** — Verifies features use real data, checks for mock/hardcoded values, validates platform parity
 
 Findings are rated using a standardized table format with Urgency, Risk, ROI, Blast Radius, and Fix Effort columns. Tables adapt to terminal width — narrow terminals get a compact view with the full table in the report file.
+
+For how Workflow Audit differs from pattern-based tools (linters, compiler warnings, code review), and how it pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector), see [How It Works](docs/HOW_IT_WORKS.md).
 
 ## Full Plugin
 
@@ -94,10 +124,6 @@ These plugins systematically scan your codebase using pattern matching and heuri
 - Review the skill's detection patterns periodically to understand what it actually checks vs what you assume it checks
 
 **Bottom line:** An audit plugin replaces neither testing nor human review. It's a force multiplier for the reviewer, not a replacement.
-
-## How It Works
-
-For how Workflow Audit differs from pattern-based tools (linters, compiler warnings, code review), and how it pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector), see [How It Works](docs/HOW_IT_WORKS.md).
 
 ## See Also
 
