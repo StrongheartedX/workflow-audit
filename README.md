@@ -1,5 +1,7 @@
 # Workflow Audit Skill
 
+Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
+
 A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that audits SwiftUI user workflows for dead ends, broken promises, and UX friction.
 
 ## Prerequisites
@@ -127,8 +129,11 @@ These plugins systematically scan your codebase using pattern matching and heuri
 
 ## See Also
 
-- [Bug Prospector](https://github.com/Terryc21/bug-prospector) — Find bugs that pattern-based scanners miss
-- [Xcode Workflow Skills](https://github.com/Terryc21/xcode-workflow-skills) — Full 22-skill suite (includes both)
+- [Stuffolio](https://stuffolio.app) -- the iOS/macOS app these skills were built for
+- [Radar Suite](https://github.com/Terryc21/radar-suite) -- 7 audit skills that trace data through complete user flows
+- [code-smarter](https://github.com/Terryc21/code-smarter) -- Prompt rewriting + personalized coding tutorials from your codebase
+- [Bug Prospector](https://github.com/Terryc21/bug-prospector) -- Find bugs that pattern-based scanners miss
+- [Xcode Workflow Skills](https://github.com/Terryc21/xcode-workflow-skills) -- Full 22-skill suite (includes both)
 
 ## License
 
