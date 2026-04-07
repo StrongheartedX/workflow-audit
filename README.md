@@ -131,11 +131,8 @@ These plugins systematically scan your codebase using pattern matching and heuri
 
 ## See Also
 
-- [Stuffolio](https://stuffolio.app) -- the iOS/macOS app these skills were built for
-- [Radar Suite](https://github.com/Terryc21/radar-suite) -- 7 audit skills that trace data through complete user flows
-- [code-smarter](https://github.com/Terryc21/code-smarter) -- Prompt rewriting + personalized coding tutorials from your codebase
-- [Bug Prospector](https://github.com/Terryc21/bug-prospector) -- Find bugs that pattern-based scanners miss
-- [Xcode Workflow Skills](https://github.com/Terryc21/xcode-workflow-skills) -- Full 22-skill suite (includes both)
+- [Radar Suite](https://github.com/Terryc21/radar-suite) -- 7 behavioral audit skills that trace data through complete user flows
+- [code-smarter](https://github.com/Terryc21/code-smarter) -- Prompt rewriting and personalized coding tutorials from your own codebase
 
 ## License
 
