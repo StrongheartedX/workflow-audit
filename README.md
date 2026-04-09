@@ -1,10 +1,27 @@
-# Workflow Audit Skill
+# Workflow Audit Skill — v3.0.0
 
 ![Visitors](https://komarev.com/ghpvc/?username=Terryc21&repo=workflow-audit&label=visitors&color=blue) ![GitHub stars](https://img.shields.io/github/stars/Terryc21/workflow-audit?style=flat) ![GitHub forks](https://img.shields.io/github/forks/Terryc21/workflow-audit?style=flat)
 
 Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
 
 A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that audits SwiftUI user workflows for dead ends, broken promises, and UX friction.
+
+## Recent Changes
+
+| Version  | Highlight                                          |
+|----------|----------------------------------------------------|
+| **v3.0** | Cross-skill handoff with radar-suite -- writes      |
+|          | persona evaluation for ui-path-radar, reads         |
+|          | ui-path-radar findings as companion data            |
+| **v2.6** | Adopted radar-suite-core.md for infrastructure      |
+|          | parity (session persistence, checkpoint/resume,     |
+|          | wave-based fixes, work receipts, suppression)       |
+| **v2.5** | 12 new issue categories (32 total) aligned with     |
+|          | ui-path-radar. Compact table headers.               |
+| **v2.4** | Experience-level session setup with auto-apply      |
+| **v2.3** | --explain/--no-explain toggle, --sort modes         |
+
+Full details in [CHANGELOG.md](CHANGELOG.md).
 
 ## Prerequisites
 
@@ -20,11 +37,12 @@ claude plugin install workflow-audit
 
 ## Included Skills
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| **Workflow Audit** | `/workflow-audit` | 5-layer UI audit: discover entry points, trace flows, detect issues, evaluate UX, verify data wiring |
-| **Plan** | `/plan --workflow-audit` | Consume audit findings into a phased fix plan with per-task prompting |
-| **Rating System** | *(shared reference)* | Standardized rating format used by both skills |
+| Skill              | Command                | Description                           |
+|--------------------|------------------------|---------------------------------------|
+| **Workflow Audit** | `/workflow-audit`      | 5-layer UI audit: discover entry      |
+|                    |                        | points, trace flows, detect issues,   |
+|                    |                        | evaluate UX, verify data wiring       |
+| **Plan**           | `/plan --workflow-audit`| Consume findings into phased fix plan |
 
 ## Quick Start
 

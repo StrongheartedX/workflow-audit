@@ -18,7 +18,7 @@ metadata:
 
 **Required output:** Every task MUST include Size, Urgency, Risk, ROI, Blast Radius, and LOE ratings. Do not omit these ratings.
 
-> **Rating format:** See `skills/shared/rating-system.md` for column definitions, indicator scale, and table formatting rules.
+> **Rating format:** See `radar-suite-core.md` for column definitions, indicator scale, and table formatting rules.
 
 ## Pre-flight: Git Safety Check
 

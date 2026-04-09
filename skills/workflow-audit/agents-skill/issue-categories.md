@@ -467,10 +467,39 @@ build_macos    # macOS
 
 | Severity | Categories | Action |
 |----------|------------|--------|
-| 🔴 Critical | Dead End, Wrong Destination, Mock Data | Fix immediately |
-| 🟠 High | Incomplete Navigation, Missing Auto-Activation, Unwired Data, Platform Parity Gap | Fix before release |
-| 🟡 Medium | Two-Step Flow, Missing Feedback, Orphaned Features | Fix if time permits |
-| 🟢 Low | Inconsistent Patterns | Note for future refactoring |
+| 🔴 Critical  | Dead End, Wrong Destination, Mock Data,              | Fix immediately        |
+|              | Destructive No Confirm, Silent State Reset            |                        |
+| 🟠 High      | Incomplete Nav, Missing Auto-Activation,              | Fix before release     |
+|              | Unwired Data, Platform Parity, Promise-Scope,         |                        |
+|              | Buried Action, Dismiss Trap, Context Dropping,        |                        |
+|              | Notif Nav Fragility, Sheet Asymmetry,                 |                        |
+|              | Empty State Missing, Error Recovery Missing,          |                        |
+|              | Keyboard Obscures, Permission Dead End,               |                        |
+|              | Modal Stacking, Nav Container Mismatch                |                        |
+| 🟡 Medium    | Two-Step Flow, Missing Feedback, Gesture-Only,        | Fix if time permits    |
+|              | Loading State Trap, Stale Nav Context,                |                        |
+|              | Phantom Touch Target, Race Condition UX,              |                        |
+|              | Invisible Selection, Orphaned Features                |                        |
+| 🟢 Low       | Inconsistent Patterns, Double-Nested Nav              | Note for future        |
+
+## Categories 12-32 (added v2.5.0)
+
+The following categories were added to align with ui-path-radar's detection coverage. See `agents/layer3-issue-detection.md` Categories 21-32 for full detection patterns.
+
+| #    | Category                    | Sev          | Description                              |
+|------|-----------------------------|--------------|------------------------------------------|
+| 21   | Destructive No Confirm      | 🔴 CRITICAL | Delete/clear with no dialog              |
+| 22   | Silent State Reset          | 🔴 CRITICAL | Work lost on navigate away               |
+| 23   | Empty State Missing         | 🟡 HIGH     | Blank screen when list empty             |
+| 24   | Error Recovery Missing      | 🟡 HIGH     | Error shown, no retry path               |
+| 25   | Keyboard Obscures           | 🟡 HIGH     | TextField covered by keyboard            |
+| 26   | Permission Dead End         | 🟡 HIGH     | Denied, no path to Settings              |
+| 27   | Modal Stacking              | 🟡 HIGH     | Sheets/alerts pile up                    |
+| 28   | Nav Container Mismatch      | 🟡 HIGH     | Invalid tag for container                |
+| 29   | Phantom Touch Target        | 🟢 MEDIUM   | Looks tappable but isn't                 |
+| 30   | Race Condition UX           | 🟢 MEDIUM   | Conflicting ops triggered                |
+| 31   | Invisible Selection         | 🟢 MEDIUM   | Selected but no indicator                |
+| 32   | Double-Nested Nav           | ⚪ LOW      | NavStack inside NavStack                 |
 
 ## Issue Documentation Template
 

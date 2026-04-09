@@ -695,6 +695,301 @@ if let context = stuffScoutContext, modelContext.model(for: context.itemID) != n
 
 **Severity:** 🟢 MEDIUM (edge case but can cause crashes or stale data display)
 
+### Category 21: Destructive Without Confirmation
+Delete, clear, or reset action fires immediately with no confirmation dialog or undo.
+
+**Detection patterns:**
+```swift
+// ❌ Delete with no confirmation
+Button("Delete") { modelContext.delete(item) }
+
+// ❌ Clear all with no alert
+Button("Clear All") { items.forEach { modelContext.delete($0) } }
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Confirmation dialog before destructive action
+Button("Delete") { showDeleteConfirmation = true }
+.confirmationDialog("Delete this item?", isPresented: $showDeleteConfirmation) { ... }
+
+// ✅ Swipe-to-delete (system provides implicit confirmation via gesture)
+.onDelete { offsets in modelContext.delete(items[offsets]) }
+```
+
+**How to detect programmatically:**
+1. Grep for `modelContext.delete`, `.removeAll`, `clear()` in Button actions
+2. Check if a `.confirmationDialog` or `.alert` guards the action
+3. If no guard within the same view scope → flag
+
+**Severity:** 🔴 CRITICAL (data loss with no undo)
+
+### Category 22: Silent State Reset
+In-progress work (form input, selections, draft) lost when user navigates away and back.
+
+**Detection patterns:**
+```swift
+// ❌ Form state in @State -- resets on navigate away
+@State private var title = ""
+@State private var notes = ""
+// User fills form, taps back, returns -- form is blank
+
+// ❌ Multi-step flow with no draft persistence
+@State private var step = 1
+@State private var selections: [Item] = []
+// Navigating away resets all progress
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Draft saved to model or @AppStorage
+@AppStorage("draftTitle") private var title = ""
+
+// ✅ Sheet/fullscreen -- dismissed explicitly, not by navigation
+.sheet(isPresented: $showForm) { FormView() }
+```
+
+**How to detect programmatically:**
+1. Find views with 3+ `@State` text/selection properties
+2. Check if the view is in a NavigationStack (can be popped)
+3. If state is not persisted anywhere → flag
+
+**Severity:** 🔴 CRITICAL (user loses work silently)
+
+### Category 23: Empty State Missing
+List or collection view shows nothing when empty -- no placeholder, no guidance.
+
+**Detection patterns:**
+```bash
+# Find list/collection views
+grep -rn "List {\\|ForEach\\|LazyVGrid\\|LazyVStack" Sources/ --include="*.swift"
+
+# Check for empty state handling
+# ContentUnavailableView, .overlay with isEmpty, if/else isEmpty
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ ContentUnavailableView
+if items.isEmpty {
+    ContentUnavailableView("No Items", systemImage: "tray")
+}
+
+// ✅ Always-populated lists (settings, static menus)
+```
+
+**Severity:** 🟡 HIGH (users think the app is broken)
+
+### Category 24: Error Recovery Missing
+Error displayed to user with no retry button or recovery path.
+
+**Detection patterns:**
+```bash
+# Find error display patterns
+grep -rn "\.alert\\|errorMessage\\|showError\\|isError" Sources/ --include="*.swift"
+
+# Check for retry/recovery actions nearby
+# Button("Retry"), Button("Try Again"), openURL(app-settings:)
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Retry button alongside error
+.alert("Error", isPresented: $showError) {
+    Button("Retry") { retry() }
+    Button("Cancel", role: .cancel) { }
+}
+
+// ✅ Informational alerts with OK (no action needed)
+```
+
+**Severity:** 🟡 HIGH (user stuck at error with no path forward)
+
+### Category 25: Keyboard Obscures Input
+Text field covered by keyboard with no scroll adjustment.
+
+**Detection patterns:**
+```swift
+// ❌ TextField at bottom of ScrollView with no keyboard avoidance
+ScrollView {
+    // ... tall content ...
+    TextField("Notes", text: $notes)  // buried at bottom
+}
+// No .scrollDismissesKeyboard or keyboard toolbar
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ TextField in Form (auto-scrolls)
+// ✅ .scrollDismissesKeyboard(.interactively)
+// ✅ Keyboard toolbar with Done button
+```
+
+**How to detect programmatically:**
+1. Find TextField/TextEditor inside ScrollView (not Form)
+2. Check if `.scrollDismissesKeyboard` is applied
+3. If TextField is in bottom half of content and no keyboard handling → flag
+
+**Severity:** 🟡 HIGH (user cannot see what they're typing)
+
+### Category 26: Permission Denied Dead End
+Permission denied (camera, photos, location) with no explanation or path to Settings.
+
+**Detection patterns:**
+```swift
+// ❌ Permission check with no recovery
+if status == .denied {
+    Text("Permission denied")  // dead end
+}
+
+// ❌ Silent failure on permission denial
+guard status == .authorized else { return }
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Link to Settings
+if status == .denied {
+    Button("Open Settings") {
+        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+    }
+}
+```
+
+**Severity:** 🟡 HIGH (user cannot use feature and has no path forward)
+
+### Category 27: Modal Stacking
+Multiple sheets or alerts presented on top of each other.
+
+**Detection patterns:**
+```swift
+// ❌ Sheet inside sheet
+.sheet(isPresented: $showA) {
+    ViewA()
+        .sheet(isPresented: $showB) { ViewB() }  // stacks
+}
+
+// ❌ Alert triggered while sheet is open
+// Multiple .alert modifiers on same view with overlapping conditions
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Sequential presentation (dismiss first, then present second)
+// ✅ NavigationStack inside sheet (pushes, not stacks)
+```
+
+**Severity:** 🟡 HIGH (confusing UX, dismiss behavior unpredictable)
+
+### Category 28: Navigation Container Mismatch
+`selectedSection = .X` where `.X` is not a valid tag in the current container.
+
+**Detection patterns:**
+```bash
+# Find all selectedSection assignments
+grep -rn "selectedSection = \." Sources/ --include="*.swift"
+
+# Find valid TabView tags (iPhone)
+grep -rn "\.tag(\." Sources/ --include="*.swift" | grep -i "tab"
+
+# Find valid sidebar items
+grep -rn "\.tag(\." Sources/ --include="*.swift" | grep -i "sidebar"
+
+# If assigned value is not a valid tag on either platform → flag
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Assigned value matches a .tag() in both TabView and sidebar
+// ✅ Assignment inside platform check (#if os(iOS))
+```
+
+**Severity:** 🟡 HIGH (user taps, nothing happens -- silent dead end)
+
+### Category 29: Phantom Touch Target
+Visual element looks tappable (icon, card, styled row) but has no action.
+
+**Detection patterns:**
+```swift
+// ❌ Image with visual affordance but no action
+Image(systemName: "chevron.right")  // implies navigation
+    .foregroundStyle(.blue)         // implies tappable
+// No Button wrapper, no onTapGesture
+
+// ❌ HStack styled like a row but not tappable
+HStack {
+    Image(systemName: "bell.fill")
+    Text("Notifications")
+    Spacer()
+    Image(systemName: "chevron.right")
+}
+// No NavigationLink, no Button, no onTapGesture
+```
+
+**Severity:** 🟢 MEDIUM (user taps repeatedly on non-interactive element)
+
+### Category 30: Race Condition UX
+User can trigger conflicting operations simultaneously (double-tap, edit while syncing).
+
+**Detection patterns:**
+```swift
+// ❌ Action button not disabled during async operation
+Button("Save") { Task { await save() } }
+// No .disabled(isSaving) -- user can tap multiple times
+
+// ❌ Edit allowed while sync is in progress
+// No guard against concurrent modification
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ Button disabled during operation
+Button("Save") { Task { await save() } }
+    .disabled(isSaving)
+```
+
+**Severity:** 🟢 MEDIUM (can cause duplicate saves, data conflicts)
+
+### Category 31: Invisible Selection
+Item is selected or active but has no visual differentiation.
+
+**Detection patterns:**
+```swift
+// ❌ Selection state exists but no visual change
+@State private var selectedItem: Item?
+// List rows look identical whether selected or not
+// No .listRowBackground, no accent, no checkmark
+```
+
+**Safe patterns (do NOT flag):**
+```swift
+// ✅ System List with selection (automatic highlighting)
+List(selection: $selectedItem) { ... }
+
+// ✅ Manual highlight
+.listRowBackground(item == selectedItem ? Color.accentColor.opacity(0.1) : nil)
+```
+
+**Severity:** 🟢 MEDIUM (user unsure which item is active)
+
+### Category 32: Double-Nested Navigation
+NavigationStack inside NavigationStack causing double navigation bars or broken back behavior.
+
+**Detection patterns:**
+```swift
+// ❌ NavigationStack wrapping a view that's already inside a NavigationStack
+NavigationStack {
+    DetailView()  // DetailView also contains NavigationStack
+}
+```
+
+**How to detect programmatically:**
+1. Grep for `NavigationStack` in all view files
+2. For each, check if the view is ever embedded inside another NavigationStack
+3. Check if views presented in `.sheet` or `.navigationDestination` wrap their own NavigationStack (this is correct for sheets, wrong for push destinations)
+
+**Severity:** ⚪ LOW (double nav bar, confusing back button behavior)
+
 ## Detection Process
 
 ### Step 1: Entry Point Audit

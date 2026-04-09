@@ -1,10 +1,11 @@
 ---
 name: workflow-audit
 description: 'Systematic UI workflow auditing for SwiftUI applications. Discovers entry points, traces user flows, detects dead ends and broken promises, audits data wiring, evaluates from user perspective. Triggers: "workflow audit", "audit flows", "find dead ends", "check navigation".'
-version: 2.4.0
+version: 3.0.0
 author: Terry Nyberg
 license: MIT
 allowed-tools: [Read, Grep, Glob, Bash, Edit, Write, AskUserQuestion]
+inherits: radar-suite-core.md
 metadata:
   tier: execution
   category: analysis
@@ -66,28 +67,40 @@ For templates and examples:
 
 ## Issue Categories
 
-| Category | Severity | Description |
-|----------|----------|-------------|
-| Dead End | 🔴 CRITICAL | Entry point leads nowhere |
-| Wrong Destination | 🔴 CRITICAL | Entry point leads to wrong place |
-| Mock Data | 🔴 CRITICAL | Feature shows fabricated data when real data exists |
-| Incomplete Navigation | 🟡 HIGH | User must scroll/search after landing |
-| Missing Auto-Activation | 🟡 HIGH | Expected mode/state not set |
-| Unwired Data | 🟡 HIGH | Model data exists but feature ignores it |
-| Platform Parity Gap | 🟡 HIGH | Feature works on one platform, broken on another |
-| Promise-Scope Mismatch | 🟡 HIGH | Specific CTA opens generic/broad destination |
-| Buried Primary Action | 🟡 HIGH | Primary button hidden below scroll fold |
-| Dismiss Trap | 🟡 HIGH | Only visible action is Cancel/back, no forward path |
-| Two-Step Flow | 🟢 MEDIUM | Intermediate selection required |
-| Missing Feedback | 🟢 MEDIUM | No confirmation of success |
-| Gesture-Only Action | 🟢 MEDIUM | Feature only accessible via swipe/long-press |
-| Loading State Trap | 🟢 MEDIUM | Spinner with no cancel/timeout/escape |
-| Context Dropping | 🟡 HIGH | Navigation path loses item context between platforms or via notifications |
-| Notification Nav Fragility | 🟡 HIGH | Untyped NotificationCenter dict used for navigation context |
-| Sheet Presentation Asymmetry | 🟡 HIGH | Different presentation mechanisms per platform for same feature |
-| Stale Navigation Context | 🟢 MEDIUM | Cached context with no clearing/validation mechanism |
-| Inconsistent Pattern | ⚪ LOW | Same feature accessed differently |
-| Orphaned Code | ⚪ LOW | Feature exists but no entry point |
+| Category                    | Severity     | Description                                  |
+|-----------------------------|--------------|----------------------------------------------|
+| Dead End                    | 🔴 CRITICAL | Entry point leads nowhere                    |
+| Wrong Destination           | 🔴 CRITICAL | Entry point leads to wrong place             |
+| Mock Data                   | 🔴 CRITICAL | Shows fabricated data when real data exists   |
+| Destructive Without Confirm | 🔴 CRITICAL | Delete/clear with no confirmation dialog      |
+| Silent State Reset          | 🔴 CRITICAL | In-progress work lost on navigate away        |
+| Incomplete Navigation       | 🟡 HIGH     | Must scroll/search after landing              |
+| Missing Auto-Activation     | 🟡 HIGH     | Expected mode/state not set                   |
+| Unwired Data                | 🟡 HIGH     | Model data exists but feature ignores it      |
+| Platform Parity Gap         | 🟡 HIGH     | Works on one platform, broken on another      |
+| Promise-Scope Mismatch      | 🟡 HIGH     | Specific CTA opens generic destination        |
+| Buried Primary Action       | 🟡 HIGH     | Primary button hidden below scroll fold       |
+| Dismiss Trap                | 🟡 HIGH     | Only Cancel/back visible, no forward path     |
+| Context Dropping            | 🟡 HIGH     | Item context lost between platforms/notifs    |
+| Notification Nav Fragility  | 🟡 HIGH     | Untyped dict used for navigation context      |
+| Sheet Presentation Asymm    | 🟡 HIGH     | Different sheet mechanisms per platform       |
+| Empty State Missing         | 🟡 HIGH     | Blank screen when list empty                  |
+| Error Recovery Missing      | 🟡 HIGH     | Error shown but no retry or recovery path     |
+| Keyboard Obscures Input     | 🟡 HIGH     | TextField covered by keyboard, no scroll      |
+| Permission Denied Dead End  | 🟡 HIGH     | Denied with no path to Settings               |
+| Modal Stacking              | 🟡 HIGH     | Multiple sheets/alerts stacked                |
+| Nav Container Mismatch      | 🟡 HIGH     | Selection tag invalid for current container   |
+| Two-Step Flow               | 🟢 MEDIUM   | Intermediate selection required               |
+| Missing Feedback            | 🟢 MEDIUM   | No confirmation of success                    |
+| Gesture-Only Action         | 🟢 MEDIUM   | Only accessible via swipe/long-press          |
+| Loading State Trap          | 🟢 MEDIUM   | Spinner with no cancel/timeout/escape         |
+| Stale Navigation Context    | 🟢 MEDIUM   | Cached context never cleared/validated        |
+| Phantom Touch Target        | 🟢 MEDIUM   | Looks tappable but has no action              |
+| Race Condition UX           | 🟢 MEDIUM   | Conflicting ops triggered simultaneously      |
+| Invisible Selection         | 🟢 MEDIUM   | Selected/active but no visual indicator       |
+| Inconsistent Pattern        | ⚪ LOW      | Same feature accessed differently             |
+| Orphaned Code               | ⚪ LOW      | Feature exists but no entry point             |
+| Double-Nested Navigation    | ⚪ LOW      | NavigationStack inside NavigationStack        |
 
 ## Design Principles
 
@@ -166,6 +179,14 @@ Store as `USER_EXPERIENCE`. Apply to ALL output for the session.
 
 ---
 
+## Shared Patterns
+
+See `radar-suite-core.md` for: Session Persistence, Checkpoint & Resume, Accepted Risks, Wave-Based Fix Presentation, Fix-Forward Bias, Test Hygiene, Plain Language Communication, Work Receipts, Contradiction Detection, Finding Classification, Audit Methodology, Context Exhaustion, Progress Banner, Issue Rating Tables, Known-Intentional Suppression, Pattern Reintroduction Detection, Experience-Level Output Rules, Implementation Sort Algorithm, Handoff YAML schema, Opt-Out.
+
+> **Path note:** workflow-audit uses `.workflow-audit/` instead of `.radar-suite/` for all persistent files (session-prefs.yaml, checkpoint.yaml, known-intentional.yaml, ledger.yaml).
+
+---
+
 ## Execution Instructions
 
 When invoked, perform the workflow audit:
@@ -217,6 +238,7 @@ Targeted flow trace — trace a specific user journey described in natural langu
 2. Rate: discoverability, efficiency, feedback, recovery
 3. Map violations to design principles
 4. Output to `layer4-semantic-evaluation.md`
+5. Write `.workflow-audit/persona-handoff.yaml` (see Persona Handoff section)
 
 ### If "layer5" or "data-wiring" or "wiring":
 1. Inventory model properties and relationships (what data the app tracks)
@@ -261,7 +283,7 @@ Compare current codebase against the previous audit to show what changed:
 
 > **CRITICAL FORMATTING RULE:** The Issue Rating Table below IS the output. Do NOT create separate sections for "Critical Issues", "Data Wiring Issues", "Recommendations", or any other vertical breakdown of findings. Every finding — navigation issues, data wiring issues, orphaned code, missing feedback, design violations — goes into ONE table as ONE row. Context goes in the Finding column. No exceptions.
 
-Before rendering, check terminal width with `tput cols`. If under 160 columns, use the compact 4-column table inline (# / Finding / Urgency / Fix Effort) and write the full 8-column table to the report file only. See `skills/shared/rating-system.md` Display Requirements for details.
+Before rendering, check terminal width with `tput cols`. If under 100 columns, use the compact 4-column table inline (# / Finding / Urgency / Effort) and write the full 8-column table to the report file only. If the table renders as vertical blocks instead of horizontal rows, tell the user: "The rating table needs a wider terminal to display correctly. Try widening your window or using full-screen mode."
 
 After completing the audit, provide:
 
@@ -273,17 +295,19 @@ That's it. Three items. No other sections.
 
 ### Issue Rating Table
 
-> **Reference:** See `skills/shared/rating-system.md` for full column definitions, indicator scale, and sorting rules.
+> **Reference:** See `radar-suite-core.md` for full column definitions, indicator scale, and sorting rules.
 
 **Hard formatting rule — Table, not list:** ALL findings MUST be in a single markdown table. Each finding is ONE ROW. Ratings are COLUMNS read left-to-right. Never expand findings into individual sections, vertical blocks, or bullet-pointed ratings. Do NOT create separate headed sections for categories of findings (e.g., "Data Wiring Issues", "Critical Issues", "Orphaned Views"). ALL categories go in the same table. The Finding column carries the context.
 
 All findings MUST be presented in this format, sorted by Urgency then ROI:
 
 ```markdown
-| # | Finding | Urgency | Risk: Fix | Risk: No Fix | ROI | Blast Radius | Fix Effort |
-|---|---------|---------|-----------|-------------|-----|-------------|------------|
-| 1 | Dead end: "View Warranty" → empty sheet | 🔴 Critical | ⚪ Low | 🔴 Critical | 🟠 Excellent | 🟢 2 files | Trivial |
-| 2 | Promise-scope mismatch: "Track Price" opens generic list | 🟡 High | 🟢 Medium | 🟡 High | 🟠 Excellent | 🟡 4 files | Small |
+| #   | Finding                        | Urgency      | Risk:Fix | Risk:NoFix | ROI      | Blast    | Effort  |
+|-----|--------------------------------|--------------|----------|------------|----------|----------|---------|
+| 1   | Dead end: "View Warranty"      | 🔴 Critical | ⚪ Low  | 🔴 Crit   | 🟠 Exc  | 🟢 2f   | Trivial |
+|     | → empty sheet                  |              |          |            |          |          |         |
+| 2   | Promise-scope: "Track Price"   | 🟡 High     | 🟢 Med  | 🟡 High   | 🟠 Exc  | 🟡 4f   | Small   |
+|     | opens generic list             |              |          |            |          |          |         |
 ```
 
 Use the Issue Rating scale:
@@ -296,7 +320,7 @@ Use the Issue Rating scale:
 
 ### User Impact Explanations
 
-If the user passes `--explain` (or the project's CLAUDE.md includes `explain-findings: true`), append a brief explanation for each finding after the Issue Rating Table. See `skills/shared/rating-system.md` "User Impact Explanations" for the exact format and rules.
+If the user passes `--explain` (or the project's CLAUDE.md includes `explain-findings: true`), append a brief explanation for each finding after the Issue Rating Table. See `radar-suite-core.md` "User Impact Explanations" for the exact format and rules.
 
 ### End-of-Audit Suggestion
 
@@ -344,7 +368,7 @@ file_timestamps:
 issues:
   - id: <sequential number>
     finding: "<description>"
-    category: <dead_end|wrong_destination|mock_data|incomplete_navigation|missing_activation|unwired_data|platform_gap|promise_scope_mismatch|buried_primary_action|dismiss_trap|two_step_flow|missing_feedback|gesture_only_action|loading_state_trap|inconsistent_pattern|orphaned_code>
+    category: <dead_end|wrong_destination|mock_data|destructive_no_confirm|silent_state_reset|incomplete_navigation|missing_activation|unwired_data|platform_gap|promise_scope_mismatch|buried_primary_action|dismiss_trap|context_dropping|notif_nav_fragility|sheet_asymmetry|empty_state_missing|error_recovery_missing|keyboard_obscures|permission_dead_end|modal_stacking|nav_container_mismatch|two_step_flow|missing_feedback|gesture_only_action|loading_state_trap|stale_nav_context|phantom_touch_target|race_condition_ux|invisible_selection|inconsistent_pattern|orphaned_code|double_nested_nav>
     urgency: <critical|high|medium|low>
     risk_fix: <critical|high|medium|low>
     risk_no_fix: <critical|high|medium|low>
@@ -372,5 +396,74 @@ Optional field suggesting how the planning skill might batch issues:
 - Issues with the same `group_hint` are candidates for a single task
 - The planning skill is free to ignore hints and group differently
 - Common hints: `missing_confirmations`, `missing_feedback`, `orphaned_features`, `dead_code`, `platform_parity`
+
+---
+
+## Persona Handoff (Cross-Skill)
+
+After completing Layer 4 (full audit or standalone layer4), write `.workflow-audit/persona-handoff.yaml` for consumption by ui-path-radar (if installed):
+
+```yaml
+source: workflow-audit
+version: <skill version>
+timestamp: <ISO 8601>
+project: <project name>
+
+personas:
+  - name: "Warranty Tracker"
+    goal: "Never miss a warranty deadline"
+    key_workflows:
+      - "Add item with warranty"
+      - "See expiring warranties"
+    evaluation:
+      discovery: 5     # 1-5 star rating
+      efficiency: 4
+      feedback: 5
+      recovery: 5
+    issues_found:
+      - finding_ref: 3   # issue id from handoff.yaml
+        impact: "Breaks trust in promotion cards"
+
+evaluation_matrix:
+  - workflow: "Add Item"
+    discovery: 5
+    efficiency: 4
+    feedback: 5
+    recovery: 5
+
+checks_performed:
+  categories_scanned:   # all 32 category keys
+    - dead_end
+    - wrong_destination
+    - mock_data
+    - destructive_no_confirm
+    - silent_state_reset
+    # ... (all 32)
+  persona_evaluation: true
+  personas_defined: <count>
+```
+
+**When to generate:** After Layer 4 completes (full audit or standalone `layer4` invocation). Not generated for individual layer1/layer2/layer3 runs.
+
+**If ui-path-radar is not installed:** The file is still written. It costs nothing and will be consumed if ui-path-radar is installed later.
+
+---
+
+## Cross-Skill Handoff Consumption (Optional)
+
+Before starting Layer 3, read companion handoffs (if they exist):
+
+```
+Read .agents/ui-audit/ui-path-radar-handoff.yaml (if exists)
+Read .radar-suite/ui-path-radar-handoff.yaml (if exists)
+```
+
+If found:
+1. Parse `checks_performed.categories_scanned` to see which categories ui-path-radar already checked
+2. Import any CRITICAL/HIGH findings as companion findings -- include in the Issue Rating Table tagged `[via ui-path-radar]`
+3. Still run your own scan independently -- cross-reference, don't skip
+4. For overlapping findings (same file + same category), note "Also flagged by ui-path-radar" instead of reporting as a new finding
+
+If not found: proceed normally. No change to audit behavior.
 
 </workflow-audit>

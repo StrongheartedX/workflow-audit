@@ -222,3 +222,17 @@ evaluation:
 | **Layer 4** | **User impact** | "Breaks trust, user feels misled" |
 
 Layer 4 answers: "Why does this matter to users?"
+
+---
+
+## Persona Handoff Output
+
+After completing the evaluation matrix, write `.workflow-audit/persona-handoff.yaml` with:
+
+1. **Personas:** Each user type identified during analysis, with their goal, key workflows, and D/E/F/R ratings
+2. **Evaluation matrix:** Per-workflow ratings across all 4 criteria
+3. **Checks performed:** Full list of issue categories scanned and persona metadata
+
+This file is consumed by ui-path-radar (if installed) to enrich its own Layer 4 scoring. If ui-path-radar is not installed, the file is still written for future use.
+
+See the schema definition in SKILL.md "Persona Handoff (Cross-Skill)" section.
