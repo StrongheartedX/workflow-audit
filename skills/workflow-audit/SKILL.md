@@ -1,7 +1,7 @@
 ---
 name: workflow-audit
 description: 'Systematic UI workflow auditing for SwiftUI applications. Discovers entry points, traces user flows, detects dead ends and broken promises, audits data wiring, evaluates from user perspective. Triggers: "workflow audit", "audit flows", "find dead ends", "check navigation".'
-version: 2.2.0
+version: 2.4.0
 author: Terry Nyberg
 license: MIT
 allowed-tools: [Read, Grep, Glob, Bash, Edit, Write, AskUserQuestion]
@@ -125,6 +125,46 @@ Base all findings on current source code only. Do not read or reference
 files in `.agents/`, `scratch/`, or prior audit reports. Ignore cached
 findings from auto-memory or previous sessions. Every finding must come
 from scanning the actual codebase as it exists now.
+
+## Session Setup (MANDATORY -- first invocation only)
+
+On first invocation, ask the user two questions in a single `AskUserQuestion` call:
+
+**Question 1: "What's your experience level with Swift/SwiftUI?"**
+- **Experienced (Recommended)** -- Concise, no definitions
+- **Senior/Expert** -- Terse, file:line only
+- **Intermediate** -- Standard terms, explain non-obvious
+- **Beginner** -- Plain language, define terms
+
+**Question 2: "Would you like a brief explanation of what this skill does?"**
+- **No, let's go (Recommended)** -- Skip explanation, proceed to audit
+- **Yes, briefly** -- Show experience-adapted explanation, then proceed
+
+**Experience-adapted explanations:**
+
+- **Beginner**: "Workflow Audit checks every button, link, and menu item in your app to make sure they work correctly. Think of it like testing every door in a building -- does it open? Does it lead where the sign says? Does anything break along the way? It runs in 5 layers, each going deeper into your app's user experience."
+- **Intermediate**: "Workflow Audit systematically audits all UI entry points, traces user flows, detects dead ends and broken promises, evaluates UX from the user perspective, and verifies data wiring. Five layers: discovery → tracing → issues → evaluation → data wiring."
+- **Experienced**: "5-layer UI audit: entry points, flow traces, issue detection, UX evaluation, data wiring. Rating tables + fix plans."
+- **Senior/Expert**: "Entry point → flow → issues → UX → wiring. Rating tables."
+
+Store as `USER_EXPERIENCE`. Apply to ALL output for the session.
+
+**Experience-level auto-apply:**
+- If Beginner: auto-enable `--explain` (user impact explanations), default sort to `impact`
+- If Senior/Expert: default sort to `effort`
+- Apply output rules per Experience-Level Output Rules table:
+
+| Output Element | Beginner | Intermediate | Experienced | Senior/Expert |
+|---|---|---|---|---|
+| Skill intro | Full paragraph | 2-3 sentences | One line | Skip |
+| `--explain` | Auto-enabled | Off (suggested) | Off | Off |
+| Progress banner | Full with hints | Full with hints | Compact (no hints) | One-line status |
+| Finding text | Plain language + "why it matters" | Standard terminology | file:line + description | file:line only |
+| Sort default | `--sort impact` | `--sort urgency` | `--sort urgency` | `--sort effort` |
+| Design citations | Always cite principle | On non-obvious only | Never | Never |
+| Post-fix summary | Full before/after | Brief | Skip | Skip |
+
+---
 
 ## Execution Instructions
 
@@ -254,12 +294,18 @@ Use the Issue Rating scale:
 - **Blast Radius:** Number of files the fix touches (e.g., "⚪ 1 file", "🟢 3 files", "🟡 12 files"). Count by grepping for callers/references before rating.
 - **Fix Effort:** Trivial / Small / Medium / Large
 
+### User Impact Explanations
+
+If the user passes `--explain` (or the project's CLAUDE.md includes `explain-findings: true`), append a brief explanation for each finding after the Issue Rating Table. See `skills/shared/rating-system.md` "User Impact Explanations" for the exact format and rules.
+
 ### End-of-Audit Suggestion
 
 After presenting audit results, always print:
 
 ```
 💡 To generate a phased fix plan from these findings, run: /plan --workflow-audit
+💡 Re-sort: --sort effort (easiest first) · --sort impact (most visible first) · --sort implement (build order)
+💡 Explain findings: --explain (adds what's wrong / fix / user experience for each finding)
 ```
 
 ---
