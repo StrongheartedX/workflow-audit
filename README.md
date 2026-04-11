@@ -2,6 +2,10 @@
 
 ![Visitors](https://komarev.com/ghpvc/?username=Terryc21&repo=workflow-audit&label=visitors&color=blue) ![GitHub stars](https://img.shields.io/github/stars/Terryc21/workflow-audit?style=flat) ![GitHub forks](https://img.shields.io/github/forks/Terryc21/workflow-audit?style=flat)
 
+<a href="https://buymeacoffee.com/stuffolio">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
+</a>
+
 Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
 
 A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that audits SwiftUI user workflows for dead ends, broken promises, and UX friction.
