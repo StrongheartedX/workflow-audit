@@ -1,0 +1,69 @@
+name: Bug report
+description: The skill produced wrong output, missed something it should have caught, or behaved unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Concrete examples are the most useful: what you ran, what you expected, what happened.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe the unexpected behavior in a few sentences.
+      placeholder: The skill reported a dead end at FooView.swift:42, but the view has working navigation on both iOS and macOS.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should the skill have done instead?
+      placeholder: The skill should not flag this path because NavigationLink wires it to BarDetailView.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: How to reproduce. Include the command you ran and, if possible, a minimal code snippet.
+      placeholder: |
+        1. Ran `/workflow-audit layer3` on a project with this view:
+        ```swift
+        struct FooView: View { ... }
+        ```
+        2. Got: ...
+    validations:
+      required: true
+
+  - type: input
+    id: skill-version
+    attributes:
+      label: Skill version
+      description: Check the CHANGELOG or your plugin cache for the version you are running.
+      placeholder: v2.3.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Xcode version, Swift version, macOS version, approximate codebase size.
+      placeholder: |
+        Xcode 26.3, Swift 6.2, macOS 26
+        Codebase: ~400 Swift files, SwiftUI + SwiftData
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output or logs
+      description: Paste any relevant skill output, error messages, or screenshots.
+      render: text
+    validations:
+      required: false

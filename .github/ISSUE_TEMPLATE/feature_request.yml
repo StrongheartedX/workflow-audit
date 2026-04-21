@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a new audit category, detection pattern, or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggestions grounded in real bugs the skill missed are the most actionable. If you can link to a specific case, please include it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What kind of issue is the skill missing, misclassifying, or failing to detect?
+      placeholder: The skill catches dead ends in sheets but misses dead ends in full-screen covers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: A concrete example
+      description: A real code sample, audit output, or scenario that illustrates the gap.
+      placeholder: |
+        ```swift
+        .fullScreenCover(isPresented: $showOnboarding) { OnboardingView() }
+        ```
+        OnboardingView has no dismiss path, but the audit passes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed approach
+      description: What should the skill do? Grep pattern, semantic rule, decision criteria, or just a description.
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and tradeoffs
+      description: What kinds of false positives or edge cases might this introduce?
+    validations:
+      required: false
