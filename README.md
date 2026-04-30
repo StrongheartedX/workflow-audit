@@ -151,10 +151,11 @@ These plugins systematically scan your codebase using pattern matching and heuri
 
 **Bottom line:** An audit plugin replaces neither testing nor human review. It's a force multiplier for the reviewer, not a replacement.
 
-## See Also
+## Other Claude Code skills I have built
 
-- [Radar Suite](https://github.com/Terryc21/radar-suite) -- 7 behavioral audit skills that trace data through complete user flows
-- [code-smarter](https://github.com/Terryc21/code-smarter) -- Prompt rewriting and personalized coding tutorials from your own codebase
+- [code-smarter](https://github.com/Terryc21/code-smarter) -- prompter rewrites your prompt for clarity before Claude acts; tutorial-creator generates annotated code-reading lessons from your own codebase
+- [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
+- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
 
 ## License
 
