@@ -1,4 +1,6 @@
-# Workflow Audit Skill — v3.0.0
+# Workflow Audit Skill
+
+![Status](https://img.shields.io/badge/version-v3.0.0-blue) ![License](https://img.shields.io/github/license/Terryc21/workflow-audit)
 
 Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
 
@@ -12,25 +14,28 @@ If this audit catches a real workflow problem for you, a [coffee](https://buymea
 
 ## Recent Changes
 
+All entries shipped together on 2026-04-09 as a rolled-up release sequence (per [CHANGELOG.md](CHANGELOG.md)).
+
 | Version  | Highlight                                          |
 |----------|----------------------------------------------------|
-| **v3.0** | Cross-skill handoff with radar-suite -- writes      |
-|          | persona evaluation for ui-path-radar, reads         |
-|          | ui-path-radar findings as companion data            |
-| **v2.6** | Adopted radar-suite-core.md for infrastructure      |
-|          | parity (session persistence, checkpoint/resume,     |
-|          | wave-based fixes, work receipts, suppression)       |
-| **v2.5** | 12 new issue categories (32 total) aligned with     |
-|          | ui-path-radar. Compact table headers.               |
-| **v2.4** | Experience-level session setup with auto-apply      |
-| **v2.3** | --explain/--no-explain toggle, --sort modes         |
+| **v3.0** | Cross-skill handoff with radar-suite -- writes     |
+|          | persona evaluation for ui-path-radar, reads        |
+|          | ui-path-radar findings as companion data           |
+| **v2.6** | Adopted radar-suite-core.md for infrastructure     |
+|          | parity (session persistence, checkpoint/resume,    |
+|          | wave-based fixes, work receipts, suppression)      |
+| **v2.5** | 12 new issue categories (32 total) aligned with    |
+|          | ui-path-radar. Compact table headers.              |
+| **v2.4** | Experience-level session setup with auto-apply     |
+| **v2.3** | --explain/--no-explain toggle, --sort modes        |
 
 Full details in [CHANGELOG.md](CHANGELOG.md).
 
 ## Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthropic's CLI for Claude)
-- Xcode (for iOS/macOS projects)
+- A SwiftUI project (iOS, iPadOS, or macOS). The methodology is SwiftUI-specific; UIKit projects won't get useful findings.
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthropic's CLI for Claude). The skill methodology can also be pasted into Cursor, Windsurf, Copilot Chat, or any other AI tool with file access — see "Using Without Claude Code" below.
+- Xcode is helpful for opening the audited code, but not required for the audit itself.
 
 ## Install
 
@@ -57,7 +62,7 @@ claude plugin install workflow-audit
 
 ## Using Without Claude Code
 
-The [SKILL.md](https://github.com/Terryc21/radar-suite/blob/main/skills/workflow-audit/SKILL.md) is the methodology in markdown. You can paste it as context in any AI tool that has file access (Cursor, Windsurf, Copilot Chat, etc.) and get most of the value.
+The [SKILL.md](https://github.com/Terryc21/workflow-audit/blob/main/skills/workflow-audit/SKILL.md) is the methodology in markdown. You can paste it as context in any AI tool that has file access (Cursor, Windsurf, Copilot Chat, etc.) and get most of the value.
 
 **Starter prompt for other AI tools:**
 
@@ -101,6 +106,8 @@ Run individual layers when you don't need a full audit:
 
 ## How It Works
 
+**Core methodology:** orphaned views and unwired data have no code signature to search for. Workflow Audit finds them by listing everything that *should* be connected, then checking which ones aren't — the inverse of a linter, which searches for known bad patterns.
+
 The workflow audit uses a 5-layer approach:
 
 1. **Pattern Discovery** — Scans for sheet triggers, navigation links, promotion cards, and context menus to build an entry point inventory
@@ -112,15 +119,6 @@ The workflow audit uses a 5-layer approach:
 Findings are rated using a standardized table format with Urgency, Risk, ROI, Blast Radius, and Fix Effort columns. Tables adapt to terminal width — narrow terminals get a compact view with the full table in the report file.
 
 For how Workflow Audit differs from pattern-based tools (linters, compiler warnings, code review), and how it pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector), see [How It Works](docs/HOW_IT_WORKS.md).
-
-## Full Plugin
-
-Want all 22 Xcode development skills (testing, debugging, refactoring, release prep, security audit, and more)?
-
-```bash
-claude plugin marketplace add Terryc21/xcode-workflow-skills
-claude plugin install xcode-workflow-skills
-```
 
 ---
 
@@ -155,7 +153,8 @@ These plugins systematically scan your codebase using pattern matching and heuri
 
 - [code-smarter](https://github.com/Terryc21/code-smarter) -- prompter rewrites your prompt for clarity before Claude acts; tutorial-creator generates annotated code-reading lessons from your own codebase
 - [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
-- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
+- [radar-suite](https://github.com/Terryc21/radar-suite) -- 8-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
+- [xcode-workflow-skills](https://github.com/Terryc21/xcode-workflow-skills) -- 22-skill bundle for full Xcode development workflow (testing, debugging, refactoring, release prep, security audit). Workflow-audit ships inside this bundle; install it directly if you want only the audit, install the full bundle if you want the broader development skill set.
 
 ## License
 
