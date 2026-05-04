@@ -120,6 +120,8 @@ Findings are rated using a standardized table format with Urgency, Risk, ROI, Bl
 
 For how Workflow Audit differs from pattern-based tools (linters, compiler warnings, code review), and how it pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector), see [How It Works](docs/HOW_IT_WORKS.md).
 
+A complete sample 5-layer audit report (using real Stuffolio findings) is at [`skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md`](skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md). It demonstrates all 5 layers — Discovery, Flow Tracing, Issue Detection, Semantic Evaluation, Data Wiring — with the issue rating table, detailed findings, and the phased fix-plan output.
+
 ---
 
 ## Cautionary Note: AI-Powered Audit Plugins
