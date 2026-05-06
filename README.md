@@ -1,80 +1,145 @@
-# Workflow Audit Skill
+# Workflow Audit
 
-![Status](https://img.shields.io/badge/version-v3.0.0-blue) ![License](https://img.shields.io/github/license/Terryc21/workflow-audit)
+**A Claude Code skill that finds dead ends and broken flows in your SwiftUI app by tracing what a real user would actually do.**
 
-Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
+Built while shipping [Stuffolio](https://stuffolio.app), an iOS/macOS app I work on every day. Free, open source, no paid tier, no referral links.
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that audits SwiftUI user workflows for dead ends, broken promises, and UX friction.
+<a href="https://buymeacoffee.com/stuffolio"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="120"></a>
 
-If this audit catches a real workflow problem for you, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. Issue reports about what worked or didn't are even more useful.
+If this audit catches a real problem for you, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. Issue reports about what worked or didn't are even more useful.
 
-<a href="https://buymeacoffee.com/stuffolio">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
-</a>
+---
 
-## Recent Changes
+## What is this, and why might I want it?
 
-All entries shipped together on 2026-04-09 as a rolled-up release sequence (per [CHANGELOG.md](CHANGELOG.md)).
+If you're newer to Claude Code and unsure what an "audit skill" does, here's the short version.
 
-| Version  | Highlight                                          |
-|----------|----------------------------------------------------|
-| **v3.0** | Cross-skill handoff with radar-suite -- writes     |
-|          | persona evaluation for ui-path-radar, reads        |
-|          | ui-path-radar findings as companion data           |
-| **v2.6** | Adopted radar-suite-core.md for infrastructure     |
-|          | parity (session persistence, checkpoint/resume,    |
-|          | wave-based fixes, work receipts, suppression)      |
-| **v2.5** | 12 new issue categories (32 total) aligned with    |
-|          | ui-path-radar. Compact table headers.              |
-| **v2.4** | Experience-level session setup with auto-apply     |
-| **v2.3** | --explain/--no-explain toggle, --sort modes        |
+A **skill** is a markdown file Claude Code knows how to run. When you type `/workflow-audit`, Claude follows the instructions in that skill, looks at your code, and writes you a report. You don't have to memorize anything. The skill tells Claude what to do; you read the report.
 
-Full details in [CHANGELOG.md](CHANGELOG.md).
+What this particular skill does: it pretends to be a user trying to do something in your app, then walks through your SwiftUI code to see if anything would block them. The kinds of problems it finds:
 
-## Prerequisites
+- Buttons that don't navigate anywhere
+- Sheets you can open but can't close
+- Features that exist in your code but aren't reachable from any menu
+- Empty states with no way out
+- Buttons that look like they do something but actually call a stub
+- Features that only show up on iOS but not on macOS (or the other way around)
 
-- A SwiftUI project (iOS, iPadOS, or macOS). The methodology is SwiftUI-specific; UIKit projects won't get useful findings.
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthropic's CLI for Claude). The skill methodology can also be pasted into Cursor, Windsurf, Copilot Chat, or any other AI tool with file access — see "Using Without Claude Code" below.
-- Xcode is helpful for opening the audited code, but not required for the audit itself.
+These are problems a code linter usually misses, because the bug is in the *connection* between files, not in any single file. Each file is fine on its own. The handoff is broken.
+
+---
 
 ## Install
 
-```bash
-claude plugin marketplace add Terryc21/workflow-audit
-claude plugin install workflow-audit
+Two commands in Claude Code:
+
+```
+/plugin marketplace add Terryc21/workflow-audit
 ```
 
-## Included Skills
+```
+/plugin install workflow-audit@workflow-audit
+```
 
-| Skill              | Command                | Description                           |
-|--------------------|------------------------|---------------------------------------|
-| **Workflow Audit** | `/workflow-audit`      | 5-layer UI audit: discover entry      |
-|                    |                        | points, trace flows, detect issues,   |
-|                    |                        | evaluate UX, verify data wiring       |
-| **Plan**           | `/plan --workflow-audit`| Consume findings into phased fix plan |
+Run them one at a time and wait for the first to confirm before running the second.
 
-## Quick Start
+That's it. The skill is now available everywhere you use Claude Code.
 
-1. Open Claude Code in any SwiftUI project
-2. Run `/workflow-audit` for a full 5-layer audit
-3. Review the findings table
-4. Run `/plan --workflow-audit` to generate a phased fix plan
+---
 
-## Using Without Claude Code
+## Your first run (start here)
 
-The [SKILL.md](https://github.com/Terryc21/workflow-audit/blob/main/skills/workflow-audit/SKILL.md) is the methodology in markdown. You can paste it as context in any AI tool that has file access (Cursor, Windsurf, Copilot Chat, etc.) and get most of the value.
+If you've never run an audit, **don't start with the full 5-layer scan**. Audits read a lot of files and can use a noticeable chunk of your weekly Claude Code allocation.
 
-**Starter prompt for other AI tools:**
+Try a single layer first:
+
+```
+/workflow-audit layer1
+```
+
+This just looks for entry points: every place a user might tap to start a flow. Sheets, navigation links, dashboard buttons, context menus. The output is a list of every door into your app.
+
+Read it. You'll learn things just from the inventory itself. If a feature you built isn't on the list, it means there's no visible way for a user to reach it.
+
+When you're ready for more, run:
+
+```
+/workflow-audit layer3
+```
+
+Layer 3 looks for actual workflow bugs (dead ends, dismiss traps, buried buttons, fragile notifications, mock data leaking into production). The output is a rated table of findings, each citing a specific file:line in your project so you can verify them yourself.
+
+The full 5-layer audit is `/workflow-audit` with no arguments. It runs all five phases in order and produces the most thorough report. Save it for before a release or after a major refactor.
+
+---
+
+## What each layer does
+
+You can run these individually or let the full audit do them in order.
+
+| Command | What it looks for |
+|---|---|
+| `/workflow-audit layer1` | **Discovery.** Every entry point in your app. Sheets, NavigationLinks, toolbar buttons, dashboard cards, context menus. Builds an inventory you can sanity-check. |
+| `/workflow-audit layer2` | **Flow tracing.** Picks key user journeys and walks each one start to finish, documenting every step. |
+| `/workflow-audit layer3` | **Issue detection.** 32 categories of workflow bugs: dead ends, dismiss traps, buried CTAs, sheet asymmetry, gesture-only actions, mock data, platform parity gaps, and more. |
+| `/workflow-audit layer4` | **Semantic evaluation.** Looks at your flows from the user's point of view: is the discoverability okay? Is feedback timely? Can the user recover from a mistake? |
+| `/workflow-audit layer5` | **Data wiring.** Checks that features actually use real data, not mock or hardcoded values. Flags features that look complete but have a stub at the bottom. |
+
+There's also `/workflow-audit fix` (turns findings into a phased fix plan) and `/workflow-audit status` (shows progress when an audit was interrupted).
+
+---
+
+## What the output looks like
+
+Every audit produces a markdown report saved to `.agents/research/` in your project. Each finding has:
+
+- A short description of the problem
+- The exact file and line where it lives
+- A rating table (urgency, risk, ROI, blast radius, fix effort)
+- A suggested fix when one is obvious
+
+A real example using my own Stuffolio findings: [example audit report](skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md).
+
+The report doesn't change your code. You decide which findings to fix, defer, or ignore. The skill is there to surface candidates, not to commit changes.
+
+---
+
+## Why this is different from a linter
+
+A linter looks at one file at a time and matches what it sees against a list of known patterns. It catches real bugs, but only the kinds with a code signature.
+
+Workflow Audit goes the other direction. It lists everything that *should* be connected (every screen, every action, every flow) and then checks which ones aren't. That inverse approach catches bugs that have no code signature, like an orphaned view or an action handler that's never wired up.
+
+A useful analogy: a linter is the building inspector confirming every wire is up to code. Workflow Audit is the home inspector who turns on the lights to see which ones don't come on.
+
+---
+
+## Honest about limits
+
+This skill is a tool, not an oracle. A few things to keep in mind before you act on a finding:
+
+- **It surfaces candidates, not verdicts.** "Buried button" is a judgment call about screen size and user attention. The skill flags candidates; you decide.
+- **False positives happen.** Code flagged as "orphaned" might be intentionally retained for a feature that's not yet wired up.
+- **False negatives happen.** A novel bug pattern the skill hasn't seen yet won't be detected. A clean audit means zero *known-pattern* problems, not zero problems.
+- **Business logic is not in scope.** The skill can verify a button exists. It can't verify the button does the right thing when tapped.
+
+The right way to use any audit skill: treat findings as leads to investigate, not items to fix blindly. Verify critical findings before committing.
+
+---
+
+## Using this without Claude Code
+
+If you don't use Claude Code but use Cursor, Windsurf, Copilot Chat, or another AI tool with file access, you can still get most of the value. Paste the skill's methodology file ([SKILL.md](skills/workflow-audit/SKILL.md)) into your AI's context along with this prompt:
 
 ```
 You are a code auditor for iOS/SwiftUI projects. I'm giving you a skill
 document that describes a multi-phase UI workflow audit.
 
 1. Read the methodology sections — they define HOW to scan
-2. Follow the phase order: Discovery → Flow Tracing → Issue Detection →
-   Semantic Evaluation → Data Wiring
-3. For each phase, enumerate candidates FIRST, then verify each one —
-   do NOT just search for known anti-patterns
+2. Follow the phase order: Discovery, Flow Tracing, Issue Detection,
+   Semantic Evaluation, Data Wiring
+3. For each phase, enumerate candidates FIRST, then verify each one.
+   Do NOT just search for known anti-patterns.
 
 Key principle: orphaned views and unwired data have no code signature
 to search for. You find them by listing everything that SHOULD be
@@ -86,83 +151,51 @@ Here is the skill document:
 Start with Phase 1: list all view files and their navigation connections.
 ```
 
-**What Claude Code adds:** Automated tool integration (Grep, Glob, Bash), multi-phase session management, finding lifecycle tracking, and cross-skill handoffs. The prompt approach gets you the scanning methodology; Claude Code automates the execution.
-
-## Layer-by-Layer
-
-Run individual layers when you don't need a full audit:
-
-| Command | What it does |
-|---------|-------------|
-| `/workflow-audit layer1` | Discovery — find all UI entry points |
-| `/workflow-audit layer2` | Trace — follow critical user paths |
-| `/workflow-audit layer3` | Issues — detect dead ends, buried buttons, dismiss traps, and more |
-| `/workflow-audit layer4` | Evaluate — assess user impact |
-| `/workflow-audit layer5` | Data wiring — verify real data usage |
-| `/workflow-audit trace "A → B → C"` | Trace a specific user flow path |
-| `/workflow-audit diff` | Compare current findings against previous audit |
-| `/workflow-audit fix` | Generate fixes for found issues |
-| `/workflow-audit status` | Show audit progress |
-
-## How It Works
-
-**Core methodology:** orphaned views and unwired data have no code signature to search for. Workflow Audit finds them by listing everything that *should* be connected, then checking which ones aren't — the inverse of a linter, which searches for known bad patterns.
-
-The workflow audit uses a 5-layer approach:
-
-1. **Pattern Discovery** — Scans for sheet triggers, navigation links, promotion cards, and context menus to build an entry point inventory
-2. **Flow Tracing** — Traces critical user paths from entry to completion, documenting each step
-3. **Issue Detection** — 20 categories including dead ends, buried buttons, dismiss traps, context dropping, notification fragility, sheet asymmetry, stale context, gesture-only actions, loading traps, mock data, and more. 14 automated grep-based checks (including notification type-safety and simulated delay detection) with regression canaries.
-4. **Semantic Evaluation** — Evaluates from the user's perspective: discoverability, efficiency, feedback, recovery
-5. **Data Wiring** — Verifies features use real data, checks for mock/hardcoded values, validates platform parity
-
-Findings are rated using a standardized table format with Urgency, Risk, ROI, Blast Radius, and Fix Effort columns. Tables adapt to terminal width — narrow terminals get a compact view with the full table in the report file.
-
-For how Workflow Audit differs from pattern-based tools (linters, compiler warnings, code review), and how it pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector), see [How It Works](docs/HOW_IT_WORKS.md).
-
-A complete sample 5-layer audit report (using real Stuffolio findings) is at [`skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md`](skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md). It demonstrates all 5 layers — Discovery, Flow Tracing, Issue Detection, Semantic Evaluation, Data Wiring — with the issue rating table, detailed findings, and the phased fix-plan output.
+What Claude Code adds on top of the manual prompt: tool integration (Grep, Glob, Bash), session management across multiple phases, finding-lifecycle tracking, and handoffs to other audit skills. The prompt approach gets you the methodology; Claude Code automates the execution.
 
 ---
 
-## Cautionary Note: AI-Powered Audit Plugins
+## Updates
 
-**Plugins like `workflow-audit` are tools, not oracles.**
+The skill changes regularly. To get the latest version:
 
-These plugins systematically scan your codebase using pattern matching and heuristics. They can surface real issues you'd miss manually — but they have inherent limitations:
+```
+/plugin update workflow-audit
+```
 
-**What they're good at:**
-- Finding structural inconsistencies (orphaned code, missing handlers, type mismatches)
-- Catching patterns that compile but fail silently at runtime
-- Enforcing consistency across platforms (iOS vs macOS parity)
-- Providing a repeatable, systematic checklist
+Recent release notes are in [CHANGELOG.md](CHANGELOG.md). Star the repo on GitHub to get notified of new releases.
 
-**What they can miss:**
-- Business logic correctness — a plugin can verify a button exists, not that it does the right thing
-- User experience nuance — "buried" is a judgment call that depends on content height, screen size, and context
-- False positives — code flagged as "orphaned" may be intentionally retained for future use
-- False negatives — novel bug patterns not covered by existing checks won't be detected
+---
 
-**How to use them responsibly:**
-- Treat findings as leads to investigate, not verdicts to act on blindly
-- Verify critical findings manually before committing fixes
-- Expect the plugin to evolve — today's checks won't catch tomorrow's new patterns
-- Don't assume a clean audit means zero issues; it means zero *known-pattern* issues
-- Review the skill's detection patterns periodically to understand what it actually checks vs what you assume it checks
+## Other Claude Code skills I've built
 
-**Bottom line:** An audit plugin replaces neither testing nor human review. It's a force multiplier for the reviewer, not a replacement.
+- [code-smarter](https://github.com/Terryc21/code-smarter) — turns a file from your project into an annotated tutorial with vocabulary, quizzes, and gap analysis. Works for any language.
+- [prompter](https://github.com/Terryc21/prompter) — rewrites your Claude Code prompt for clarity and fixes typos before acting.
+- [bug-echo](https://github.com/Terryc21/bug-echo) — after you fix a bug, scans the codebase for similar patterns elsewhere.
+- [radar-suite](https://github.com/Terryc21/radar-suite) — 6 audit skills for iOS/macOS Swift codebases. Workflow Audit complements these by tracing flows; the radars trace data, models, and visual quality.
 
-## Other Claude Code skills I have built
+All free, all Apache 2.0, all built while shipping Stuffolio.
 
-- [code-smarter](https://github.com/Terryc21/code-smarter) -- generates annotated code-reading lessons from your own codebase, with vocabulary tracking and gap analysis
-- [prompter](https://github.com/Terryc21/prompter) -- rewrites your prompt for clarity before Claude acts. (Originally bundled with code-smarter; split into its own repo for independent discovery.)
-- [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
-- [radar-suite](https://github.com/Terryc21/radar-suite) -- 8-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
-- [xcode-workflow-skills](https://github.com/Terryc21/xcode-workflow-skills) -- 22-skill bundle for full Xcode development workflow (testing, debugging, refactoring, release prep, security audit). Workflow-audit ships inside this bundle; install it directly if you want only the audit, install the full bundle if you want the broader development skill set.
+---
+
+## Requirements
+
+- A SwiftUI project (iOS, iPadOS, or macOS). UIKit projects won't get useful findings.
+- Claude Code, or any AI tool that can read files and follow markdown instructions.
+- Xcode is helpful for opening flagged files but not required for the audit.
+
+---
+
+## Deeper documentation
+
+Want more than the basics? See [README-detailed.md](README-detailed.md) for the previous long-form README, which covers the full methodology, version history, and how Workflow Audit pairs with [Bug Prospector](https://github.com/Terryc21/bug-prospector). The methodology itself lives in [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
+
+---
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## Author
 
-Created by [Terry Nyberg](https://github.com/Terryc21)
+Terry Nyberg, [Coffee & Code LLC](https://stuffolio.app/).
