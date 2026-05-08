@@ -164,7 +164,7 @@ Or check [CHANGELOG.md](CHANGELOG.md). Recent releases (v2.5 → v3.0) added cro
 
 ## Other Claude Code skills I've built
 
-- [code-smarter](https://github.com/Terryc21/code-smarter) — turns a file from your project into an annotated tutorial with vocabulary tracking, pre/post tests, and prerequisite gap analysis. Works for any language.
+- [tutorial-creator](https://github.com/Terryc21/tutorial-creator) — turns a file from your project into an annotated tutorial with vocabulary tracking, pre/post tests, and prerequisite gap analysis. Works for any language.
 - [prompter](https://github.com/Terryc21/prompter) — rewrites your Claude Code prompt for clarity (resolves ambiguous references, tightens vague verbs, restructures stacked questions) before acting.
 - [bug-echo](https://github.com/Terryc21/bug-echo) — after you fix a bug, infers the anti-pattern from your diff, validates against the pre-fix file, and scans for sibling instances.
 - [radar-suite](https://github.com/Terryc21/radar-suite) — six audit skills for iOS/macOS Swift. Includes ui-path-radar (the structural-layer counterpart to this skill) plus data-model, time-bomb, roundtrip, ui-enhancer, and a capstone aggregator.
