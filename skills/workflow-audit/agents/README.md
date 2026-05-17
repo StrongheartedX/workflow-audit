@@ -2,6 +2,8 @@
 
 A systematic approach to discovering, tracing, evaluating, and verifying UI workflows in SwiftUI applications.
 
+> **Note:** Concrete examples in this file (sheet enum names, file paths, "Results Summary" counts) reference a real workflow-audit run on the Stuffolio codebase. They are illustrative — the *methodology* (5 layers, issue categories, design principles, cautionary note) is reusable; the specific projects/files/counts are not. A full sample scan lives in `../examples/sample-stuffolio-scan/`.
+
 ## Overview
 
 The Workflow Audit Skill uses a 5-layer approach to identify workflow issues:
@@ -138,34 +140,42 @@ VStack(spacing: 0) {
 
 ## Files
 
+**Skill contents (this directory tree):**
+
 ```
-.agents/workflow-audit/
-├── README.md                      # This file
-├── layer1-patterns.md             # Discovery regex patterns
-├── layer1-inventory.yaml          # Entry point catalog
-├── layer1-summary.md              # Layer 1 findings
-├── layer2-methodology.md          # Flow tracing process
-├── layer2-summary.md              # Layer 2 findings
-├── layer2-traces/                 # Detailed flow traces
+agents/                                # methodology
+├── README.md                          # this file
+├── layer1-patterns.md                 # Discovery regex patterns
+├── layer2-methodology.md              # Flow tracing process
+├── layer3-issue-detection.md          # Issue categories + detection
+├── layer4-semantic-evaluation.md      # User impact analysis
+└── layer5-data-wiring.md              # Data wiring methodology
+
+../examples/sample-stuffolio-scan/     # illustrative output
+├── README.md
+├── sample-layer1-inventory.yaml
+├── sample-layer1-summary.md
+├── sample-layer2-summary.md
+├── sample-layer2-traces/
 │   ├── flow-001-pricewatch.yaml
 │   ├── flow-002-repairadvisor.yaml
 │   └── flow-003-bulkactions.yaml
-├── layer3-issue-detection.md      # Issue detection methodology
-├── layer3-results.yaml            # Categorized issues
-├── layer4-semantic-evaluation.md  # User impact analysis
-└── layer5-data-wiring.md          # Data wiring methodology
+└── sample-layer3-results.yaml
 ```
 
-## Results Summary (Stuffolio v1.0 Build 25)
+**Runtime output (written to `.workflow-audit/` in your project root when the skill runs):**
 
-### Issues Found: 14
-
-| Severity | Count | Key Issues |
-|----------|-------|------------|
-| 🔴 Critical | 1 | MenuBarView PersistentIdentifier vs String type mismatch |
-| 🟡 High | 3 | macOS Stuff Scout one-shot bug, 2 buried primary actions |
-| 🟢 Medium | 7 | Mock data (2), unwired data (3), orphaned code (2) |
-| ⚪ Low | 3 | Platform parity gap, superseded sheet cases, unwired rating |
+```
+.workflow-audit/
+├── layer1-inventory.yaml          # Entry point catalog
+├── layer1-summary.md              # Layer 1 findings
+├── layer2-summary.md              # Layer 2 findings
+├── layer2-traces/                 # Detailed flow traces
+├── layer3-results.yaml            # Categorized issues
+├── layer4-semantic-evaluation.md  # User impact analysis
+├── layer5-data-wiring.yaml        # Data wiring audit
+└── handoff.yaml                   # for the planning skill
+```
 
 ## Usage in Other Projects
 

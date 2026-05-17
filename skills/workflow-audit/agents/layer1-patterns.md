@@ -1,5 +1,7 @@
 # Layer 1: Pattern Discovery
 
+> **Note:** Examples in this file (sheet enum names, "Discovered: 29 cases in `DashboardSheetType`," the "Learnings from Stuffolio Scan" section) are drawn from a real workflow-audit run on the Stuffolio codebase. They are illustrative — substitute the equivalent patterns from your own project. A full sample scan lives in `examples/sample-stuffolio-scan/`.
+
 ## Overview
 
 Layer 1 scans the codebase for UI entry points - places where users can trigger navigation, sheets, or actions. The goal is to create a complete inventory of "things users can tap."

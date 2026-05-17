@@ -1,5 +1,7 @@
 # Layer 4: Semantic Evaluation
 
+> **Note:** Concrete examples in this file are drawn from a real workflow-audit run on the Stuffolio codebase. The evaluation *dimensions* (discovery, efficiency, feedback, recovery) and persona structure are reusable methodology; specific personas, workflows, and findings are project-specific. A full sample scan lives in `examples/sample-stuffolio-scan/`.
+
 ## Purpose
 
 Layer 4 evaluates workflows from the **user's perspective**. While Layers 1-3 analyze code structure, Layer 4 asks: "Does this workflow help the user achieve their goal?"

@@ -1,5 +1,7 @@
 # Layer 3: Issue Detection
 
+> **Note:** Specific examples in this file ("Real examples caught in Stuffolio v1.0," concrete file paths like `Sources/Features/...`) are drawn from a real workflow-audit run on the Stuffolio codebase. They are illustrative — the issue *categories* are the reusable methodology; the *paths* and *findings* are project-specific. A full sample scan lives in `examples/sample-stuffolio-scan/`.
+
 ## Purpose
 
 Layer 3 systematically scans ALL entry points from Layer 1 and applies issue detection rules. Unlike Layer 2 (which traces specific flows in depth), Layer 3 does a breadth-first scan to categorize issues across the entire codebase.

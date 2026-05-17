@@ -1,5 +1,7 @@
 # Layer 5: Data Wiring Audit
 
+> **Note:** Grep commands and concrete examples in this file are drawn from a real workflow-audit run on the Stuffolio codebase (paths like `Sources/Features/RepairKeepReplace/`, manager names like `PriceWatch`). The detection *patterns* are reusable methodology; specific managers and features are project-specific. Substitute your project's equivalents. A full sample scan lives in `examples/sample-stuffolio-scan/`.
+
 ## Purpose
 
 Layer 5 verifies that features use **real user data** instead of mock/hardcoded values, and that model capabilities are fully wired into the features that need them. While Layers 1-4 audit navigation and UX, Layer 5 audits whether the data flowing through those workflows is genuine.
