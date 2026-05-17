@@ -528,6 +528,7 @@ Rules:
 - For code-only findings (⚪ LOW), use "Developer experience" instead.
 - Order matches the table. Place after the table, before the next-step suggestion.
 - Default is off. The table is the primary output; explanations are supplementary.
+- **Precedence (highest to lowest):** explicit `--no-explain` flag · explicit `--explain` flag · CLAUDE.md `explain-findings` · Beginner-experience auto-enablement.
 
 ---
 

@@ -291,7 +291,7 @@ After completing the audit, provide:
 
 1. **One-line summary** — entry point count, issue count by severity (one sentence, not a section)
 2. **Issue Rating Table** — every finding in a single table (see below)
-3. **One-line next step** — suggest `/plan --workflow-audit` if fixes are needed
+3. **One-line next step** — suggest `/plan --workflow-audit` if fixes are needed (note: the `plan` skill ships in `skills/plan/` but is not currently registered as a slash command in this plugin; the handoff YAML it consumes is at `.workflow-audit/handoff.yaml` regardless)
 
 That's it. Three items. No other sections.
 
@@ -331,7 +331,7 @@ If the user passes `--explain` (or the project's CLAUDE.md includes `explain-fin
 After presenting audit results, always print:
 
 ```
-💡 To generate a phased fix plan from these findings, run: /plan --workflow-audit
+💡 To generate a phased fix plan from these findings, run: /plan --workflow-audit (if the plan skill is installed; otherwise consume .workflow-audit/handoff.yaml with your own tooling)
 💡 Re-sort: --sort effort (easiest first) · --sort impact (most visible first) · --sort implement (build order)
 💡 Explain findings: --explain (adds what's wrong / fix / user experience for each finding)
 ```
