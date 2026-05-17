@@ -8,15 +8,15 @@
   "plugins": [
     {
       "name": "workflow-audit",
-      "description": "3-skill audit pipeline: workflow-audit + rating-system + plan",
-      "version": "1.0.0",
+      "description": "2-skill audit pipeline: workflow-audit + plan",
+      "version": "3.0.0",
       "author": {
         "name": "Terry Nyberg"
       },
       "source": "./",
       "category": "development",
       "homepage": "https://github.com/Terryc21/workflow-audit",
-      "license": "MIT"
+      "license": "Apache-2.0"
     }
   ]
 }
