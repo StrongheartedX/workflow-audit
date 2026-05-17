@@ -3,7 +3,7 @@ name: plan
 description: Epic decomposition into trackable, right-sized tasks. Three modes — audit-aware (codebase-audit reports), workflow-audit-aware (handoff.yaml with pre-rated findings), standalone (from scratch). Light convention scanning for projects without CLAUDE.md.
 version: 1.3.0
 author: Terry Nyberg
-license: MIT
+license: Apache-2.0
 allowed-tools: [Glob, Grep, Read, Write, AskUserQuestion]
 metadata:
   tier: analysis
