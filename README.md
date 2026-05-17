@@ -8,8 +8,6 @@ workflow-audit and pattern-based linters are complementary, not competitive: lin
 
 Built while shipping [Stuffolio](https://stuffolio.app), an iOS/macOS app currently at build 33. Free, open source, Apache 2.0.
 
-> **New to Claude Code skills?** Start with [README-newer-dev.md](README-newer-dev.md) for a gentler walk-through. The doc below assumes you already work with Claude Code daily.
-
 ## TL;DR
 
 - **What:** 5-layer audit of SwiftUI user flows (Discovery → Flow Tracing → Issue Detection → Semantic Evaluation → Data Wiring). 32 issue categories.
@@ -204,11 +202,6 @@ If you're auditing a SwiftUI app, running both is the standard pattern. ui-path-
 workflow-audit is updated regularly; check the [CHANGELOG](CHANGELOG.md) before a release-blocking audit. Recent updates added cross-skill handoff with radar-suite, adopted radar-suite-core for infrastructure parity (session persistence, wave-based fixes, suppression), and grew issue categories from 20 to 32.
 
 ## Deeper documentation
-
-Two longer docs:
-
-- [README-newer-dev.md](README-newer-dev.md) — gentler walk-through aimed at readers new to Claude Code skills and audit tooling.
-- [README-detailed.md](README-detailed.md) — the original pre-rewrite README with version history, the cautionary note about AI audit limits, and additional context on the v2.x → v3.0 migration.
 
 Methodology spec: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
