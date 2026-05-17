@@ -134,10 +134,12 @@ For templates and examples:
 
 ### Freshness
 
-Base all findings on current source code only. Do not read or reference
-files in `.agents/`, `scratch/`, or prior audit reports. Ignore cached
-findings from auto-memory or previous sessions. Every finding must come
-from scanning the actual codebase as it exists now.
+Base all findings on current source code only. Do NOT read prior
+workflow-audit reports from `.workflow-audit/` or `.agents/` (they are
+stale). DO read companion handoff YAML from sibling skills (radar-suite,
+ui-path-radar) — they describe the current codebase from a different
+angle, not stale findings. Ignore cached findings from auto-memory or
+previous sessions.
 
 ## Session Setup (MANDATORY -- first invocation only)
 
@@ -321,6 +323,8 @@ Use the Issue Rating scale:
 ### User Impact Explanations
 
 If the user passes `--explain` (or the project's CLAUDE.md includes `explain-findings: true`), append a brief explanation for each finding after the Issue Rating Table. See `radar-suite-core.md` "User Impact Explanations" for the exact format and rules.
+
+**Precedence (highest to lowest):** explicit `--no-explain` flag · explicit `--explain` flag · CLAUDE.md `explain-findings` · Beginner-experience auto-enablement.
 
 ### End-of-Audit Suggestion
 
