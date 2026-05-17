@@ -138,15 +138,14 @@ Audits only that path. Faster than the full discovery layer; useful when a teste
 Every audit writes a markdown report to `.agents/research/YYYY-MM-DD-workflow-audit-<slug>.md`. Standard format across the radar/audit ecosystem:
 
 - File and line citations for every finding (the schema gate rejects unattributed claims)
-- 9-column rating table: severity, urgency, risk-of-fix, risk-of-no-fix, ROI, blast radius, fix effort, status, axis classification
-- 3-axis classification: Axis 1 (release-blocking), Axis 2 (quality), Axis 3 (hygiene)
+- 8-column rating table: #, finding, urgency, risk-of-fix, risk-of-no-fix, ROI, blast radius, fix effort (status column added on re-displays)
 - Suggested fix when one is mechanical
 
 The report doesn't change your code. You decide which findings to fix, defer, or skip.
 
 ### Reading the reports
 
-The 9-column rating table needs a wide terminal (~180 chars) to render as a horizontal table. In a narrower window the cells stack vertically and the report becomes harder to scan. For best readability:
+The 8-column rating table needs a wide terminal (~150 chars) to render as a horizontal table. In a narrower window the cells stack vertically and the report becomes harder to scan. For best readability:
 
 - **GitHub or GitLab**: open the report file in the web UI; tables render natively.
 - **Markdown viewer apps**: [MacDown](https://macdown.uranusjr.com/) (Mac, free), [Marked 2](https://marked2app.com/) (Mac, paid), [Obsidian](https://obsidian.md/) or [Typora](https://typora.io/) (cross-platform).

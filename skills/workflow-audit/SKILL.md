@@ -5,6 +5,8 @@ version: 3.0.0
 author: Terry Nyberg
 license: Apache-2.0
 allowed-tools: [Read, Grep, Glob, Bash, Edit, Write, AskUserQuestion]
+# `inherits:` is resolved relative to this skill directory. If radar-suite-core.md
+# is relocated to a sibling skill or shared package, update this path.
 inherits: radar-suite-core.md
 metadata:
   tier: execution
@@ -141,43 +143,18 @@ ui-path-radar) — they describe the current codebase from a different
 angle, not stale findings. Ignore cached findings from auto-memory or
 previous sessions.
 
-## Session Setup (MANDATORY -- first invocation only)
+## Session Setup
 
-On first invocation, ask the user two questions in a single `AskUserQuestion` call:
+Session Setup is defined in `radar-suite-core.md` (4 questions: experience, table format, fix handling, optional explanation). Use that — do not duplicate it here.
 
-**Question 1: "What's your experience level with Swift/SwiftUI?"**
-- **Experienced (Recommended)** -- Concise, no definitions
-- **Senior/Expert** -- Terse, file:line only
-- **Intermediate** -- Standard terms, explain non-obvious
-- **Beginner** -- Plain language, define terms
-
-**Question 2: "Would you like a brief explanation of what this skill does?"**
-- **No, let's go (Recommended)** -- Skip explanation, proceed to audit
-- **Yes, briefly** -- Show experience-adapted explanation, then proceed
-
-**Experience-adapted explanations:**
+When question 4 ("Explain what this skill does?") is answered "Yes, briefly," substitute these workflow-audit-specific explanations for the generic ones in the inherited core:
 
 - **Beginner**: "Workflow Audit checks every button, link, and menu item in your app to make sure they work correctly. Think of it like testing every door in a building -- does it open? Does it lead where the sign says? Does anything break along the way? It runs in 5 layers, each going deeper into your app's user experience."
 - **Intermediate**: "Workflow Audit systematically audits all UI entry points, traces user flows, detects dead ends and broken promises, evaluates UX from the user perspective, and verifies data wiring. Five layers: discovery → tracing → issues → evaluation → data wiring."
 - **Experienced**: "5-layer UI audit: entry points, flow traces, issue detection, UX evaluation, data wiring. Rating tables + fix plans."
 - **Senior/Expert**: "Entry point → flow → issues → UX → wiring. Rating tables."
 
-Store as `USER_EXPERIENCE`. Apply to ALL output for the session.
-
-**Experience-level auto-apply:**
-- If Beginner: auto-enable `--explain` (user impact explanations), default sort to `impact`
-- If Senior/Expert: default sort to `effort`
-- Apply output rules per Experience-Level Output Rules table:
-
-| Output Element | Beginner | Intermediate | Experienced | Senior/Expert |
-|---|---|---|---|---|
-| Skill intro | Full paragraph | 2-3 sentences | One line | Skip |
-| `--explain` | Auto-enabled | Off (suggested) | Off | Off |
-| Progress banner | Full with hints | Full with hints | Compact (no hints) | One-line status |
-| Finding text | Plain language + "why it matters" | Standard terminology | file:line + description | file:line only |
-| Sort default | `--sort impact` | `--sort urgency` | `--sort urgency` | `--sort effort` |
-| Design citations | Always cite principle | On non-obvious only | Never | Never |
-| Post-fix summary | Full before/after | Brief | Skip | Skip |
+The Experience-Level Output Rules table also lives in `radar-suite-core.md`. Apply it as-is.
 
 ---
 
@@ -197,6 +174,9 @@ When invoked, perform the workflow audit:
 Run all 5 layers sequentially, outputting findings to `.workflow-audit/` in the project root
 
 ### If "layer1" or "discovery":
+
+> **Source root note:** scan commands below assume Swift sources live under `Sources/` (the SwiftPM convention and the layout used by the canonical example project). For default-template Xcode projects, substitute the directory containing your `*.swift` files (often `<ProjectName>/`). Same substitution applies to every `Sources/` reference in the layer reference docs under `agents/`.
+
 1. Scan for sheet triggers: `grep -r "activeSheet = \." Sources/`
 2. Scan for navigation: `grep -r "selectedSection = \." Sources/`
 3. Scan for promotion cards: `grep -r "PromotionCard\|CompactPromotionCard" Sources/`
@@ -285,7 +265,7 @@ Compare current codebase against the previous audit to show what changed:
 
 > **CRITICAL FORMATTING RULE:** The Issue Rating Table below IS the output. Do NOT create separate sections for "Critical Issues", "Data Wiring Issues", "Recommendations", or any other vertical breakdown of findings. Every finding — navigation issues, data wiring issues, orphaned code, missing feedback, design violations — goes into ONE table as ONE row. Context goes in the Finding column. No exceptions.
 
-Before rendering, check terminal width with `tput cols`. If under 100 columns, use the compact 4-column table inline (# / Finding / Urgency / Effort) and write the full 8-column table to the report file only. If the table renders as vertical blocks instead of horizontal rows, tell the user: "The rating table needs a wider terminal to display correctly. Try widening your window or using full-screen mode."
+Always write the full 8-column table to `.workflow-audit/report.md`. In the chat response, prefer the full 8-column table; if the user reports it rendering as vertical blocks instead of horizontal rows, tell them: "The rating table needs a wider terminal to display correctly. Try widening your window or opening the report file in a markdown viewer." Do not use `tput cols` to auto-detect — it returns 80 in piped/non-TTY contexts and gives the wrong answer when the user has a wide terminal.
 
 After completing the audit, provide:
 
