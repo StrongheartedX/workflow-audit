@@ -1,12 +1,18 @@
 # workflow-audit
 
-![Last commit](https://img.shields.io/github/last-commit/Terryc21/workflow-audit) ![Stars](https://img.shields.io/github/stars/Terryc21/workflow-audit?style=flat) ![Issues](https://img.shields.io/github/issues/Terryc21/workflow-audit) ![License](https://img.shields.io/github/license/Terryc21/workflow-audit) ![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-blueviolet)
+![Version](https://img.shields.io/github/v/tag/Terryc21/workflow-audit?label=version) ![Last commit](https://img.shields.io/github/last-commit/Terryc21/workflow-audit) ![Stars](https://img.shields.io/github/stars/Terryc21/workflow-audit?style=flat) ![Issues](https://img.shields.io/github/issues/Terryc21/workflow-audit) ![License](https://img.shields.io/github/license/Terryc21/workflow-audit) ![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-blueviolet)
 
 **A 5-layer audit of SwiftUI user flows. Enumerates entry points, traces critical paths, detects 32 categories of workflow bug, evaluates UX impact, and verifies data wiring.**
 
 workflow-audit and pattern-based linters are complementary, not competitive: linters find single-file pattern violations cheaply, workflow-audit finds connection bugs across files at higher cost. **A thorough audit uses both.**
 
 Built while shipping [Stuffolio](https://stuffolio.app), an iOS/macOS app currently at build 33. Free, open source, Apache 2.0.
+
+*~6 min read · scan the TL;DR if you only have 30 seconds*
+
+## Newer to Claude Code?
+
+A **skill** is a markdown file Claude Code knows how to run. When you type `/workflow-audit`, Claude follows the instructions in this skill, walks your SwiftUI codebase across five layers, and writes you a markdown report with file:line citations. You don't have to memorize anything — the skill tells Claude what to do, you read the report.
 
 ## TL;DR
 
@@ -15,20 +21,16 @@ Built while shipping [Stuffolio](https://stuffolio.app), an iOS/macOS app curren
 - **Install:** Two `/plugin` commands in Claude Code; then `/workflow-audit` is available in any project.
 - **Try first:** `/workflow-audit layer1` runs the cheapest layer (entry-point inventory) and gives you a real report in ~10 minutes.
 - **Example output:** [a real 5-layer audit report on Stuffolio's codebase](skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md).
+- **Portable:** methodology works in Cursor, Windsurf, or any AI tool that reads files — see "Using without Claude Code" below.
 - **Maturity:** Used through real App Store submission cycles on a 600-file SwiftUI codebase; CHANGELOG tracks every release.
 
 ## What workflow-audit is for vs what linters are for
 
-workflow-audit and linters are complementary — they catch different classes of bugs. A thorough pre-release audit runs both; neither alone is sufficient.
+**Pattern-based linters** (SwiftLint, custom rule sets) check individual files against a catalog — force unwraps, missing `@MainActor`, deprecated APIs. Fast, run on every save, catch single-file violations cheaply.
 
-**Pattern-based tools (SwiftLint, custom linters, single-file audit skills)** check individual files against a rule catalog: force unwraps, missing `@MainActor`, `try?` swallowing errors, deprecated APIs, naming conventions, style. They're fast, precise, run on every save, and catch a real and important class of bugs cheaply. **They will find issues workflow-audit won't** — anything that lives inside one file's text.
+**workflow-audit** enumerates everything that *should* be connected (routing cases, model properties, notification observers) and verifies which ones actually are. It catches **orphan features** (the view exists but no entry point reaches it) and **unwired data** (declared, populated, displayed, but the populator and the displayer don't share a path). Each file is fine in isolation; the bug lives in the absence of a connection.
 
-**workflow-audit** enumerates everything that *should* be connected (every routing case, every model property, every notification observer) and verifies which ones actually are. It catches bugs that live in the *absence of a connection*, where no single file is wrong:
-
-- **Orphan features.** A view exists, compiles, runs, but no entry point reaches it. Nothing in the app's navigation enum, no menu item, no `NavigationLink`, no programmatic push. The view file is fine in isolation. The bug is the absence of a connection somewhere else.
-- **Unwired data.** A field is declared in the model, populated by some flow, displayed by another. But the populator and the displayer don't share a path — the data is computed and dropped, or read but never updated. Each file is fine. The handoff is broken.
-
-You don't find these with grep. You find them by enumerating everything that *should* connect and then verifying which ones do. workflow-audit runs that enumeration across five layers.
+You don't find these with grep. You find them by enumerating what *should* connect and then verifying which ones do, across five layers.
 
 | What linters do better | What workflow-audit does better |
 |---|---|
@@ -133,6 +135,8 @@ Audits only that path. Faster than the full discovery layer; useful when a teste
 
 **Diff mode.** After running a full audit and shipping fixes, the next run with `--diff` compares against the previous report. Findings that were Fixed don't reappear; new findings get marked as such. Useful as a release gate.
 
+**Fresh vs prior history.** The default mode is fresh — each invocation scans the codebase from scratch and produces a standalone report at `.agents/research/`. `--diff` switches to history mode: the skill loads the most recent prior report, re-runs the layers, and only surfaces *deltas* (new findings, regressed-Fixed findings, newly-Open rows). Fresh is what you want when something fundamental changed (new architecture, new platform target) or the prior report is stale; history is what you want when you've been actively fixing rows between runs and don't want to re-read findings you've already triaged.
+
 ## Output format
 
 Every audit writes a markdown report to `.agents/research/YYYY-MM-DD-workflow-audit-<slug>.md`. Standard format across the radar/audit ecosystem:
@@ -166,18 +170,6 @@ Treat findings as leads to investigate, not items to fix blindly. The `BURIED` c
 
 **Where to look for the bugs workflow-audit won't find:** pattern-based linters (SwiftLint, etc.) catch the single-file violations; runtime profiling (Instruments, debug builds with sanitizers) catches the threading and memory issues; targeted unit tests catch business-logic correctness. workflow-audit covers the connection-and-wiring gap between those tools.
 
-## Other Claude Code skills
-
-Companion tools built on the same shipping-real-software loop:
-
-- [**radar-suite**](https://github.com/Terryc21/radar-suite) — six audit skills for iOS/macOS Swift. Includes **ui-path-radar**, the structural-layer counterpart to this skill (see "Pairs with ui-path-radar" below), plus data-model, time-bomb, roundtrip, ui-enhancer, and a capstone aggregator.
-- [**tutorial-creator**](https://github.com/Terryc21/tutorial-creator) — turns a file from your project into an annotated tutorial with vocabulary tracking, pre/post tests, and prerequisite gap analysis. Works for any language.
-- [**prompter**](https://github.com/Terryc21/prompter) — rewrites your Claude Code prompt for clarity (resolves ambiguous references, tightens vague verbs, restructures stacked questions) before acting.
-- [**bug-echo**](https://github.com/Terryc21/bug-echo) — after you fix a bug, infers the anti-pattern from your diff, validates against the pre-fix file, and scans for sibling instances.
-- [**unforget**](https://github.com/Terryc21/unforget) — consolidates deferred work (paused plans, audit findings, observed bugs) into one structured file. workflow-audit findings you defer can become rows there.
-
-All free, all Apache 2.0, all built while shipping Stuffolio.
-
 ### Pairs with ui-path-radar
 
 [ui-path-radar](https://github.com/Terryc21/radar-suite) (part of [radar-suite](https://github.com/Terryc21/radar-suite)) covers similar territory at a different layer. The two are complementary:
@@ -204,10 +196,22 @@ workflow-audit is updated regularly; check the [CHANGELOG](CHANGELOG.md) before 
 
 Methodology spec: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
-## License
+## Sibling skills
 
-Apache 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+- [**bug-echo**](https://github.com/Terryc21/bug-echo) — sibling-bug scan after a fix
+- [**bug-prospector**](https://github.com/Terryc21/bug-prospector) — forward-looking bug hunt before a release
+- [**unforget**](https://github.com/Terryc21/unforget) — one-file deferred-work ledger
+- [**radar-suite**](https://github.com/Terryc21/radar-suite) — 6-skill iOS audit family (includes ui-path-radar, the structural counterpart to this skill)
+- [**prompter**](https://github.com/Terryc21/prompter) — prompt rewriting before execution
+- [**skill-reviewer**](https://github.com/Terryc21/skill-reviewer) — candid reviews of other Claude Code skills
+- [**tutorial-creator**](https://github.com/Terryc21/tutorial-creator) — annotated tutorials from your codebase
 
 ## Author
 
-Terry Nyberg, [Coffee & Code LLC](https://stuffolio.app/). If workflow-audit catches a real bug for you, [a coffee](https://buymeacoffee.com/stuffolio) is appreciated. Issue reports about what worked or didn't are even more useful.
+Terry Nyberg, [Coffee & Code LLC](https://stuffolio.app/). If workflow-audit catches a real bug for you, [a coffee](https://buymeacoffee.com/stuffolio) is appreciated. Issue reports about what worked or didn't are more useful.
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/stuffolio)
+
+## License
+
+Apache 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
