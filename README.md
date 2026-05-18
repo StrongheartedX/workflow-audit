@@ -90,8 +90,8 @@ This runs the cheapest layer (entry-point inventory) on your whole project. Fini
 The methodology is an extracted skill document; you can paste it into Cursor, Windsurf, Copilot Chat, or any other AI tool with file access. Get most of the value with a manual prompt:
 
 ```
-You are a code auditor for iOS/SwiftUI projects. I'm giving you a skill
-document that describes a multi-layer UI workflow audit.
+You are a code auditor for SwiftUI projects (iOS, iPadOS, or macOS). I'm
+giving you a skill document that describes a multi-layer UI workflow audit.
 
 1. Read the methodology sections — they define HOW to scan
 2. Follow the layer order: Discovery, Flow Tracing, Issue Detection,
@@ -201,7 +201,7 @@ Methodology spec: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 - [**bug-echo**](https://github.com/Terryc21/bug-echo) — sibling-bug scan after a fix
 - [**bug-prospector**](https://github.com/Terryc21/bug-prospector) — forward-looking bug hunt before a release
 - [**unforget**](https://github.com/Terryc21/unforget) — one-file deferred-work ledger
-- [**radar-suite**](https://github.com/Terryc21/radar-suite) — 6-skill iOS audit family (includes ui-path-radar, the structural counterpart to this skill)
+- [**radar-suite**](https://github.com/Terryc21/radar-suite) — 6-skill suite tracing user behavior paths through the app (iOS + macOS); includes ui-path-radar, the structural counterpart to this skill
 - [**prompter**](https://github.com/Terryc21/prompter) — prompt rewriting before execution
 - [**skill-reviewer**](https://github.com/Terryc21/skill-reviewer) — candid reviews of other Claude Code skills
 - [**tutorial-creator**](https://github.com/Terryc21/tutorial-creator) — annotated tutorials from your codebase
