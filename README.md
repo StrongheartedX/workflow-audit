@@ -6,7 +6,7 @@
 
 workflow-audit and pattern-based linters are complementary, not competitive: linters find single-file pattern violations cheaply, workflow-audit finds connection bugs across files at higher cost. **A thorough audit uses both.**
 
-Built while shipping [Stuffolio](https://stuffolio.app), an iOS/macOS app, through real App Store submission cycles. workflow-audit itself is free, open source, Apache 2.0.
+Built while shipping [Stuffolio](https://stuffolio.app) ([App Store](https://apps.apple.com/app/stuffolio/id6757168677)), an iOS/macOS app, through real App Store submission cycles. workflow-audit itself is free, open source, Apache 2.0.
 
 *~6 min read · scan the TL;DR if you only have 30 seconds*
 
