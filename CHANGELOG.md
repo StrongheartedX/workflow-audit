@@ -4,6 +4,21 @@ All notable changes to workflow-audit are documented here.
 
 ---
 
+## 2026-08-06 — v3.0.3
+
+One-line fix to the Layer 1 boolean-state pattern introduced in v3.0.1, caught by a second
+round of eval runs.
+
+- **`show*` boolean state was invisible to the scan.** The v3.0.1 pattern required a capital
+  letter immediately after the prefix — `(showing|isShowing|isPresenting)[A-Z]...` — so
+  `showRKRTrialExpired = true` and `showAddTask = true` matched nothing while
+  `showingSheet = true` matched. Bare `show` is now an alternative and the capital is no
+  longer required. Measured across a 614-file project: 640 matches before, 715 after — 75
+  entry points that the v3.0.1 pattern silently dropped, including a paywall sheet in the
+  directory used for testing.
+
+---
+
 ## 2026-08-06 — v3.0.2
 
 Core sync. `radar-suite-core.md` had been forked in May and was 427 lines behind the

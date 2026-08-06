@@ -1,6 +1,6 @@
 {
   "name": "workflow-audit",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "SwiftUI workflow audit — find dead ends, broken promises, and UX friction. Bundled with a phased plan generator.",
   "author": {
     "name": "Terry Nyberg"

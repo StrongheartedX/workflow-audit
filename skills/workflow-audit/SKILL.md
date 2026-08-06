@@ -1,7 +1,7 @@
 ---
 name: workflow-audit
 description: 'Systematic UI workflow auditing for SwiftUI applications. Discovers entry points, traces user flows, detects dead ends and broken promises, audits data wiring, evaluates from user perspective. Triggers: "workflow audit", "audit flows", "find dead ends", "check navigation".'
-version: 3.0.2
+version: 3.0.3
 author: Terry Nyberg
 license: Apache-2.0
 allowed-tools: [Read, Grep, Glob, Bash, Edit, Write, AskUserQuestion]
@@ -194,7 +194,7 @@ Run all 5 layers sequentially, outputting findings to `.workflow-audit/` in the 
 **Then look for the project's own routing convention**, which differs from app to app. Many codebases funnel presentation through a central enum (`activeSheet = .someCase`, `selectedSection = .someTab`, a `Route`/`Destination` type) or through named card components. Discover the local convention rather than assuming a particular spelling:
 
 5. `grep -rE "activeSheet = \.|selectedSheet = \.|selectedSection = \.|navigationPath\.append" Sources/` — central-dispatch enums, if the project has one
-6. `grep -rE "(showing|isShowing|isPresenting)[A-Z][A-Za-z]* = true" Sources/` — per-view boolean state, the most common alternative
+6. `grep -rE "(show|showing|isShowing|isPresenting)[A-Za-z]* = true" Sources/` — per-view boolean state, the most common alternative. Keep the bare `show` alternative, and don't require a capital letter after the prefix: `showRKRTrialExpired` and `showAddTask` are as common as `showingSheet`, and a pattern anchored on `showing` alone silently drops them.
 
 Then catalog every entry point found into `layer1-inventory.yaml`, and flag suspicious ones for Layer 2.
 
