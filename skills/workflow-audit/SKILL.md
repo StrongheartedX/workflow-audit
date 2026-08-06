@@ -177,12 +177,23 @@ Run all 5 layers sequentially, outputting findings to `.workflow-audit/` in the 
 
 > **Source root note:** scan commands below assume Swift sources live under `Sources/` (the SwiftPM convention and the layout used by the canonical example project). For default-template Xcode projects, substitute the directory containing your `*.swift` files (often `<ProjectName>/`). Same substitution applies to every `Sources/` reference in the layer reference docs under `agents/`.
 
-1. Scan for sheet triggers: `grep -r "activeSheet = \." Sources/`
-2. Scan for navigation: `grep -r "selectedSection = \." Sources/`
-3. Scan for promotion cards: `grep -r "PromotionCard\|CompactPromotionCard" Sources/`
-4. Scan for context menus: `grep -r "\.contextMenu" Sources/`
-5. Catalog all entry points in `layer1-inventory.yaml`
-6. Flag suspicious patterns for Layer 2 investigation
+**Start with the SwiftUI presentation APIs**, since those are the same in every project:
+
+1. Sheets and covers: `grep -rE "\.sheet\(isPresented:|\.sheet\(item:|\.fullScreenCover\(|\.popover\(" Sources/`
+2. Push navigation: `grep -rE "NavigationLink|\.navigationDestination\(" Sources/`
+3. Toolbar and menu affordances: `grep -rE "ToolbarItem|\.contextMenu|\.swipeActions|Menu \{" Sources/`
+4. Alerts and dialogs: `grep -rE "\.alert\(|\.confirmationDialog\(" Sources/`
+
+**Then look for the project's own routing convention**, which differs from app to app. Many codebases funnel presentation through a central enum (`activeSheet = .someCase`, `selectedSection = .someTab`, a `Route`/`Destination` type) or through named card components. Discover the local convention rather than assuming a particular spelling:
+
+5. `grep -rE "activeSheet = \.|selectedSheet = \.|selectedSection = \.|navigationPath\.append" Sources/` — central-dispatch enums, if the project has one
+6. `grep -rE "(showing|isShowing|isPresenting)[A-Z][A-Za-z]* = true" Sources/` — per-view boolean state, the most common alternative
+
+Then catalog every entry point found into `layer1-inventory.yaml`, and flag suspicious ones for Layer 2.
+
+**If steps 5-6 return nothing, that is information, not an answer.** A project with zero central-dispatch matches is using some other convention — not lacking entry points. Before reporting a low count, confirm against step 1's raw `.sheet(` presenters: if the app has 40 sheet modifiers and your inventory has 3 entries, the scan missed the convention, and every downstream layer inherits that blind spot. Report which patterns returned zero rather than omitting them silently, so the reader can tell "we looked and found none" from "we never looked."
+
+This matters more than it sounds. A Layer 1 that under-counts doesn't fail loudly — it produces a short, clean-looking inventory, and the audit ends up certifying a codebase it never actually scanned.
 
 ### If "layer2" or "trace" (no path argument):
 1. Read flagged entry points from Layer 1
