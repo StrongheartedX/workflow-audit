@@ -4,11 +4,15 @@
 
 **A 5-layer audit of SwiftUI user flows. Enumerates entry points, traces critical paths, detects 32 categories of workflow bug, evaluates UX impact, and verifies data wiring.**
 
-**The approach is inverted from a grep-based auditor.** A linter searches for something that's *there* — a force unwrap, a deprecated call, a known bad pattern. But the bugs this tool targets have no code signature to search for. A view nobody can navigate to looks exactly like a view someone can navigate to. A property populated by one file and displayed by another that never share a path looks correct in both. There is no string to grep for, because the bug is the *absence* of a connection.
+**This checks behavior, not code style.** Most code checkers read your app one file at a time and compare it against a list of rules — is this line written correctly? workflow-audit asks a different question: *can a person actually get from here to there and finish what they came to do?*
 
-So workflow-audit runs the search backwards: it enumerates everything that *should* be connected — every routing case, model property, notification observer — and then verifies which ones actually are. What's left over is the finding. Searching finds bad code that exists; enumerate-then-verify finds good code that's missing.
+So it walks your app the way a user would. It starts at every door into a feature — a button, a menu item, a card on the dashboard — and follows each one forward: this button opens that screen, that screen has these three actions, this action leads somewhere else. Then it asks at each step what a real person would ask. Can I get to this screen at all? Now that I'm here, is the button I need visible without scrolling? I finished the task — did anything tell me it worked? I changed my mind — can I get back out?
 
-That makes it complementary to a linter rather than competitive: they look for opposite things. Linters find single-file pattern violations cheaply; workflow-audit finds connection bugs across files at higher cost. **A thorough audit uses both.**
+That's why it finds a kind of bug a file-by-file checker structurally cannot. Consider a screen you built that no button anywhere opens. Every line of that screen is correct. It compiles, it would look fine in review, and no rule is broken — the only thing wrong is that the path to it was never connected, and the shipped app quietly doesn't include the feature. The same goes for a value your app carefully calculates and a screen that carefully displays it, when the two were never wired to each other: both files pass, and the user sees a blank space.
+
+A rule-checker can't catch either one, because nothing is written incorrectly. The problem lives in the space between the files — in the walk, not the lines.
+
+That makes it complementary to a linter rather than competitive: they answer different questions. Linters check whether each file is written correctly, cheaply and on every save. workflow-audit checks whether the paths through your app actually work, at higher cost and before a release. **A thorough audit uses both.**
 
 Built while shipping [Stuffolio](https://stuffolio.app) ([App Store](https://apps.apple.com/app/stuffolio/id6757168677)), an iOS/macOS app, through real App Store submission cycles. workflow-audit itself is free, open source, Apache 2.0.
 
@@ -32,12 +36,12 @@ A **skill** is a markdown file Claude Code knows how to run. When you type `/wor
 
 **Pattern-based linters** (SwiftLint, custom rule sets) check individual files against a catalog — force unwraps, missing `@MainActor`, deprecated APIs. Fast, run on every save, catch single-file violations cheaply.
 
-**workflow-audit** applies the enumerate-then-verify pass described above across five layers. The two bug classes it exists to catch:
+**workflow-audit** walks the paths instead, across five layers. The two bug classes it exists to catch have names in the report:
 
-- **Orphan features** — the view is built and correct, but no entry point reaches it. You shipped a screen no user can open.
-- **Unwired data** — a property is declared, populated, and displayed, but the populator and the displayer don't share a path. The UI shows a stale default and looks fine doing it.
+- **Orphan features** — a screen that's finished and correct, but nothing anywhere opens it. From the user's side, the feature simply isn't in the app.
+- **Unwired data** — the app works out a number and a screen displays a number, but the two were never connected. The user sees a placeholder or a stale value, presented as confidently as a real one.
 
-Each file passes review in isolation. The bug lives in the space between them, which is why no single-file tool has a rule for it.
+Both ship silently. Neither breaks a rule, so nothing flags them, and neither one crashes — the app just quietly does less than you built.
 
 | What linters do better | What workflow-audit does better |
 |---|---|
