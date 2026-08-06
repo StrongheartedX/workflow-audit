@@ -4,6 +4,41 @@ All notable changes to workflow-audit are documented here.
 
 ---
 
+## 2026-08-06 — v3.0.1
+
+Portability and correctness fixes, found by running the skill against a real SwiftUI
+codebase and comparing six runs (three with the skill, three without) on identical prompts.
+
+- **Layer 1 discovery patterns generalized.** Three of the four prescribed scans were one
+  project's private naming rather than SwiftUI APIs — `activeSheet`, `selectedSection`, and
+  `PromotionCard` (a component type no other codebase has). Layer 1 now leads with the
+  presentation APIs every SwiftUI project shares (`.sheet(isPresented:` / `.sheet(item:`,
+  `fullScreenCover`, `popover`, `NavigationLink` / `.navigationDestination`, toolbar /
+  `contextMenu` / `swipeActions` / `Menu`, `alert` / `confirmationDialog`), then *discovers*
+  the project's routing convention — central enum or per-view booleans — rather than assuming
+  a spelling. Measured on one feature directory: old patterns 0 matches, new patterns 36.
+- **Added an under-count guard to Layer 1.** If the convention scans return zero, cross-check
+  against the raw `.sheet(` presenter count before reporting a small inventory, and state
+  which patterns returned zero rather than omitting them. A Layer 1 that under-counts doesn't
+  fail loudly — it produces a short, clean-looking inventory, and every later layer inherits
+  the blind spot.
+- **Fixed a self-contradiction in the rating requirement.** The opening instruction demanded
+  ratings on "every finding" unconditionally while naming only four of the table's six
+  dimensions. Layer 1 produces an inventory of unverified flags, not findings, so the rule
+  collided with the Work Receipts principle. It now names all six dimensions, explains why a
+  partial rating drops a row out of triage, and scopes itself to layers that produce verified
+  findings.
+- **Session Setup now has a non-interactive path.** Setup uses AskUserQuestion, which needs a
+  user; the skill also runs as a subagent, from a script, or inside a pipeline. It now
+  proceeds with documented safe defaults (`experienced` / `full` / `review`), says it did so,
+  reads `session-prefs.yaml` if a prior interactive run left one, and never writes that file
+  from a non-interactive run.
+- **`radar-suite-core.md` added to the Reference Documentation list**, marked read-first. The
+  skill defers roughly twenty behaviors to it, but it was previously reachable only via the
+  `inherits:` frontmatter key.
+
+---
+
 ## 2026-04-09 — v3.0.0
 
 ### Cross-Skill Handoff Protocol

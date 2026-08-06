@@ -1,7 +1,7 @@
 ---
 name: workflow-audit
 description: 'Systematic UI workflow auditing for SwiftUI applications. Discovers entry points, traces user flows, detects dead ends and broken promises, audits data wiring, evaluates from user perspective. Triggers: "workflow audit", "audit flows", "find dead ends", "check navigation".'
-version: 3.0.0
+version: 3.0.1
 author: Terry Nyberg
 license: Apache-2.0
 allowed-tools: [Read, Grep, Glob, Bash, Edit, Write, AskUserQuestion]
@@ -21,7 +21,9 @@ metadata:
 
 You are performing a systematic workflow audit on this SwiftUI application.
 
-**Required output:** Every finding MUST include Urgency, Risk, ROI, and Blast Radius ratings using the Issue Rating Table format. Do not omit these ratings.
+**Rating findings.** Where a layer produces *findings* — a confirmed problem you have read the code for — rate each one on all six dimensions in the Issue Rating Table: Urgency, Risk:Fix, Risk:NoFix, ROI, Blast Radius, and Fix Effort. A partial rating quietly drops a finding out of triage: the user is deciding what to fix before the next release, and a row missing Risk:NoFix or Blast Radius can't be weighed against the rows that have them, however real the bug is.
+
+Layer 1 is the exception, by design. Its output is an *inventory* of entry points with flags for Layer 2 to investigate — hypotheses, not verified problems. Rating an unverified flag would assign urgency to something nobody has confirmed is broken, which is exactly what the Work Receipts rule exists to prevent. Layer 1 reports counts and flags; ratings begin at Layer 3 where findings are verified against source.
 
 ## Quick Commands
 
@@ -54,6 +56,7 @@ The Workflow Audit uses a 5-layer approach:
 
 Read these files for methodology and patterns (paths relative to this skill's directory):
 
+- `radar-suite-core.md` - **Read this first.** The `inherits:` key above points here, and this skill defers roughly twenty behaviors to it — Session Setup, Issue Rating Table columns and indicator scale, sort order, Work Receipts, Finding Classification, Checkpoint & Resume, the handoff schema. Without it you are missing the definitions the rest of this file assumes.
 - `agents/README.md` - Overview and quick start
 - `agents/layer1-patterns.md` - Discovery regex patterns
 - `agents/layer2-methodology.md` - Flow tracing process
@@ -146,6 +149,10 @@ previous sessions.
 ## Session Setup
 
 Session Setup is defined in `radar-suite-core.md` (4 questions: experience, table format, fix handling, optional explanation). Use that — do not duplicate it here.
+
+**When there is no user to ask.** Session Setup uses AskUserQuestion, which needs an interactive session. workflow-audit also runs where that channel doesn't exist — dispatched as a subagent, driven from a script, or invoked inside a larger pipeline. Don't stall waiting for an answer that can't arrive, and don't skip the audit: proceed with `experienced` / `full` tables / `review` (never auto-apply fixes), and say in one line that you used defaults because the run was non-interactive. Those defaults are the safe direction — full tables lose no information, and `review` means nothing gets modified without someone looking.
+
+If `.workflow-audit/session-prefs.yaml` already exists, read it and use those values instead of the defaults; a prior interactive run recorded what this user actually wants. Do not write the file from a non-interactive run — preferences the user never expressed shouldn't become sticky.
 
 When question 4 ("Explain what this skill does?") is answered "Yes, briefly," substitute these workflow-audit-specific explanations for the generic ones in the inherited core:
 
