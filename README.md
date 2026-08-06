@@ -4,7 +4,11 @@
 
 **A 5-layer audit of SwiftUI user flows. Enumerates entry points, traces critical paths, detects 32 categories of workflow bug, evaluates UX impact, and verifies data wiring.**
 
-workflow-audit and pattern-based linters are complementary, not competitive: linters find single-file pattern violations cheaply, workflow-audit finds connection bugs across files at higher cost. **A thorough audit uses both.**
+**The approach is inverted from a grep-based auditor.** A linter searches for something that's *there* — a force unwrap, a deprecated call, a known bad pattern. But the bugs this tool targets have no code signature to search for. A view nobody can navigate to looks exactly like a view someone can navigate to. A property populated by one file and displayed by another that never share a path looks correct in both. There is no string to grep for, because the bug is the *absence* of a connection.
+
+So workflow-audit runs the search backwards: it enumerates everything that *should* be connected — every routing case, model property, notification observer — and then verifies which ones actually are. What's left over is the finding. Searching finds bad code that exists; enumerate-then-verify finds good code that's missing.
+
+That makes it complementary to a linter rather than competitive: they look for opposite things. Linters find single-file pattern violations cheaply; workflow-audit finds connection bugs across files at higher cost. **A thorough audit uses both.**
 
 Built while shipping [Stuffolio](https://stuffolio.app) ([App Store](https://apps.apple.com/app/stuffolio/id6757168677)), an iOS/macOS app, through real App Store submission cycles. workflow-audit itself is free, open source, Apache 2.0.
 
@@ -28,9 +32,12 @@ A **skill** is a markdown file Claude Code knows how to run. When you type `/wor
 
 **Pattern-based linters** (SwiftLint, custom rule sets) check individual files against a catalog — force unwraps, missing `@MainActor`, deprecated APIs. Fast, run on every save, catch single-file violations cheaply.
 
-**workflow-audit** enumerates everything that *should* be connected (routing cases, model properties, notification observers) and verifies which ones actually are. It catches **orphan features** (the view exists but no entry point reaches it) and **unwired data** (declared, populated, displayed, but the populator and the displayer don't share a path). Each file is fine in isolation; the bug lives in the absence of a connection.
+**workflow-audit** applies the enumerate-then-verify pass described above across five layers. The two bug classes it exists to catch:
 
-You don't find these with grep. You find them by enumerating what *should* connect and then verifying which ones do, across five layers.
+- **Orphan features** — the view is built and correct, but no entry point reaches it. You shipped a screen no user can open.
+- **Unwired data** — a property is declared, populated, and displayed, but the populator and the displayer don't share a path. The UI shows a stale default and looks fine doing it.
+
+Each file passes review in isolation. The bug lives in the space between them, which is why no single-file tool has a rule for it.
 
 | What linters do better | What workflow-audit does better |
 |---|---|
