@@ -74,25 +74,35 @@ Plus utility commands:
 
 ## Install
 
-Two commands in Claude Code, run one at a time:
+These go into Claude Code itself, typed at the prompt where you'd normally ask it a question. Not Terminal.
+
+**First**, add this repository as a source:
 
 ```
 /plugin marketplace add Terryc21/workflow-audit
 ```
 
+You'll see a confirmation that the marketplace was added.
+
+**Then**, install the plugin:
+
 ```
 /plugin install workflow-audit@workflow-audit
 ```
 
-> **Why two commands?** Claude Code's slash-command dispatcher treats the second `/plugin` as text inside the first command. Run them one at a time.
+Run these one at a time. Pasting both together fails with a confusing SSH authentication error, because Claude Code reads the second line as part of the first command.
 
-After installing, try:
+**To check it worked:** type `/` and look for `workflow-audit` in the list that appears.
+
+Now open a SwiftUI project and try:
 
 ```
 /workflow-audit layer1
 ```
 
-This runs the cheapest layer (entry-point inventory) on your whole project. Finishes in ~10 minutes and produces a real report you can read — a low-commitment way to evaluate whether workflow-audit is worth a fuller run.
+This is the cheapest layer. It inventories every entry point in your app, takes about ten minutes, and gives you a real report to judge the rest by, without committing to a full audit.
+
+Worth knowing before you start: this is a SwiftUI-specific tool. On a UIKit or non-Apple project it won't find anything useful.
 
 **Example report:** [a real 5-layer audit on Stuffolio's codebase](skills/workflow-audit/examples/2026-04-15-workflow-audit-stuffolio.md), with all 32 categories applied and real findings + fix plans.
 
