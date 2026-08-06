@@ -133,9 +133,9 @@ A full 5-layer audit on a 200-600 file SwiftUI app is a meaningful token investm
 
 Audits only that path. Faster than the full discovery layer; useful when a tester reports an issue and you want to pin which layer it lives in.
 
-**Diff mode.** After running a full audit and shipping fixes, the next run with `--diff` compares against the previous report. Findings that were Fixed don't reappear; new findings get marked as such. Useful as a release gate.
+**Diff mode.** After running a full audit and shipping fixes, `/workflow-audit diff` compares against the previous report. Findings that were Fixed don't reappear; new findings get marked as such. Useful as a release gate.
 
-**Fresh vs prior history.** The default mode is fresh — each invocation scans the codebase from scratch and produces a standalone report at `.agents/research/`. `--diff` switches to history mode: the skill loads the most recent prior report, re-runs the layers, and only surfaces *deltas* (new findings, regressed-Fixed findings, newly-Open rows). Fresh is what you want when something fundamental changed (new architecture, new platform target) or the prior report is stale; history is what you want when you've been actively fixing rows between runs and don't want to re-read findings you've already triaged.
+**Fresh vs prior history.** The default mode is fresh — each invocation scans the codebase from scratch and produces a standalone report at `.agents/research/`. `/workflow-audit diff` switches to history mode: the skill loads the most recent prior report, re-runs the layers, and only surfaces *deltas* (new findings, regressed-Fixed findings, newly-Open rows). Fresh is what you want when something fundamental changed (new architecture, new platform target) or the prior report is stale; history is what you want when you've been actively fixing rows between runs and don't want to re-read findings you've already triaged.
 
 ## Output format
 
