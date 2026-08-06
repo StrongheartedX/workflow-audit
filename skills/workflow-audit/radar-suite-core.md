@@ -1,10 +1,18 @@
 # Shared Audit Patterns
 
-> Inherited by workflow-audit. Do NOT duplicate in SKILL.md.
+> Inherited by workflow-audit via the `inherits:` key in SKILL.md frontmatter.
+> Do NOT duplicate this content in SKILL.md.
 >
-> **workflow-audit adaptation:** Where this document references `.radar-suite/` paths,
-> substitute `.workflow-audit/` when running in the workflow-audit context.
-> For example, `.radar-suite/session-prefs.yaml` becomes `.workflow-audit/session-prefs.yaml`.
+> **workflow-audit adaptation:** this document is kept in sync with the canonical
+> `radar-suite-core.md` in the radar-suite repo. Where it references `.radar-suite/`
+> paths, substitute `.workflow-audit/` when running in the workflow-audit context —
+> e.g. `.radar-suite/session-prefs.yaml` becomes `.workflow-audit/session-prefs.yaml`.
+> The same substitution applies to `.radar-suite/checkpoint.yaml`,
+> `known-intentional.yaml`, and `ledger.yaml`.
+>
+> Where it names radar-suite skills (capstone-radar, ui-path-radar, and siblings),
+> those apply only if that suite is installed alongside; workflow-audit runs
+> standalone without them.
 
 ---
 
@@ -121,6 +129,92 @@ Using: Experienced, Full tables, Auto-fix. Last session: data-model-radar (2 day
 
 ---
 
+## Tier System
+
+Every radar-suite invocation operates at one of three depth tiers. The tier determines how many skills run, whether cross-skill handoffs occur, and what output format is used.
+
+### Tier 1: Quick Scan (default)
+
+- Single skill via direct command (e.g., `/skill data-model-radar` or `/radar-suite data-model`)
+- Each skill emits its own 8-column rating table immediately
+- No handoff YAML consumed or written. No pipeline. No capstone.
+- Fast (20-30 min per skill), interactive, user stays in control
+- **When to use:** Working on a specific area. Post-refactor sanity check. Quick feedback during development.
+- **This is the default tier.** No extra flags needed.
+
+### Tier 2: Targeted Pipeline (2-3 skills)
+
+- Run a skill subset, chosen manually or auto-selected from git diff
+- Manual: `/radar-suite --skills dmr,tbr,rtr` or `/radar-suite --scope backup`
+- Auto: `/radar-suite --changed` selects skills based on which files changed vs base branch
+- Each skill still emits its own rating table (marked "PRELIMINARY" since capstone may adjust)
+- Cross-skill handoffs within the subset only
+- Capstone runs ONLY if all 5 companion skills ran (partial capstone is misleading)
+- **When to use:** Pre-PR review. Focused audit after a feature lands. 1-2 hours.
+
+### Tier 3: Full Pipeline (all 6 skills + capstone)
+
+- All 5 companion skills + capstone in recommended order
+- Invoked via `/radar-suite --full` or the interactive menu "Full audit" option
+- Applies the 6 pipeline UX enhancements (see Pipeline UX Enhancements below)
+- Cross-skill handoffs cascade through the full sequence
+- **When to use:** Pre-release audit. Quarterly health check. First audit on a new codebase. Half-day commitment.
+
+### Tier Persistence
+
+Store the active tier in `.radar-suite/session-prefs.yaml`:
+
+```yaml
+tier: 1  # 1|2|3
+tier_skills: []  # populated for Tier 2 with skill abbreviations
+```
+
+### Tier Routing Rules
+
+- If `--skills` lists all 5 companions (`dmr,tbr,rtr,upr,uer`), auto-upgrade to Tier 3 and run capstone.
+- If `--changed` triggers only 1 skill, run as Tier 1 (inform user).
+- If `--changed` triggers 4+ skills, suggest upgrading to Tier 3 with a confirmation prompt.
+- `full` is an alias for `--full` (backward compatibility).
+
+### Skill Abbreviation Table
+
+| Abbreviation | Skill |
+|---|---|
+| `dmr` | data-model-radar |
+| `tbr` | time-bomb-radar |
+| `rtr` | roundtrip-radar |
+| `upr` | ui-path-radar |
+| `uer` | ui-enhancer-radar |
+
+---
+
+## Auto-Selection Heuristic (`--changed`)
+
+When `--changed` is used, radar-suite runs `git diff --name-only` against the base branch (or `--since YYYY-MM-DD` for date-based selection) and maps changed file patterns to skills:
+
+| Changed file pattern | Skills triggered |
+|---|---|
+| `Sources/Models/*.swift` | data-model-radar |
+| `Sources/Managers/BackupManager.swift` | roundtrip-radar, time-bomb-radar |
+| `Sources/Managers/*CacheManager.swift` | time-bomb-radar |
+| `Sources/Views/**/*.swift` | ui-path-radar, ui-enhancer-radar |
+| Any file containing `@Attribute(.externalStorage)` | time-bomb-radar |
+| Any file containing `context.delete` | time-bomb-radar |
+| `Sources/Managers/CSV*.swift` | data-model-radar |
+
+**Routing after auto-selection:**
+
+| Skills triggered | Action |
+|---|---|
+| 0 | "No radar-relevant changes detected. Run a specific skill or full audit." |
+| 1 | Run as Tier 1 (inform user: "Only [skill] is relevant to your changes.") |
+| 2-3 | Run as Tier 2 |
+| 4+ | Suggest Tier 3: "4+ skills triggered. Run full audit? [Yes / No, run these 4]" |
+
+Deduplicate and execute in standard pipeline order: dmr, tbr, rtr, upr, uer.
+
+---
+
 ## Checkpoint & Resume
 
 After completing each major phase/domain, write checkpoint to `.radar-suite/checkpoint.yaml`:
@@ -153,6 +247,69 @@ Found checkpoint from [timestamp]: [skill] Phase [N] completed.
 **On completion:** Delete checkpoint file (audit is done).
 
 **On abort:** Keep checkpoint so next session can resume.
+
+---
+
+## Artifact Lifecycle (MANDATORY)
+
+Every file a radar skill writes belongs to exactly one of three artifact classes. Each class has specific lifecycle rules. **Skills MUST NOT invent new artifact classes or ad-hoc file patterns.** If a skill needs to communicate something to the next session, it uses the class that fits — not a new one-off file.
+
+### Class 1: Persistent state (rewritten in place, never archived)
+
+Files that represent the current state of the audit. They grow and change across sessions but never accumulate copies.
+
+**Examples:** `.radar-suite/ledger.yaml`, `.radar-suite/session-prefs.yaml`, `.radar-suite/project.yaml`, `.radar-suite/known-intentional.yaml`
+
+**Rules:**
+- One canonical path. Never dated, never numbered.
+- Writes are in-place updates (append to `findings:` arrays, update `last_skill`, etc.).
+- Never duplicated, never archived. The file IS the current state.
+
+### Class 2: Single-use handoff (always overwritten, no dates)
+
+Files that communicate "what to do next" to the next session. They have no historical value — yesterday's handoff is garbage once you're past it.
+
+**Examples:** `.radar-suite/NEXT_STEPS.md`, `.radar-suite/checkpoint.yaml`, `.radar-suite/{skill}-handoff.yaml`
+
+**Rules:**
+- One canonical path per handoff purpose.
+- **Every write is an overwrite.** Never write `NEXT_STEPS_PHASE_2.md`, `NEXT_STEPS_v2.md`, `RESUME_YYYY-MM-DD.md`, etc.
+- No dates in filenames.
+- Deleted by `capstone-radar` on successful audit completion (except `{skill}-handoff.yaml` which capstone consumes then keeps for one cycle).
+- **Anti-pattern:** Do NOT create `RESUME_PHASE_N.md`, `RESUME_POST_CAPSTONE.md`, or similar per-phase handoff files. They accumulate forever because no skill knows to delete yesterday's version. If you need to communicate a next step, overwrite `NEXT_STEPS.md`.
+
+### Class 3: Dated snapshot (auto-archived when superseded)
+
+Files that represent a point-in-time snapshot and have historical value for diff/trend analysis.
+
+**Examples:** `.agents/research/YYYY-MM-DD-capstone-audit.md`, `.radar-suite/capstone-report-YYYY-MM-DD.md`
+
+**Rules:**
+- Filenames include the ISO date: `YYYY-MM-DD`.
+- Before writing a new snapshot, the skill MUST move any existing snapshots matching the same base pattern to `.radar-suite/archive/superseded/`. Only ONE live snapshot exists at the top level at any time.
+- Archive directory is bounded: skills MAY prune archived snapshots older than 90 days, but this is not mandatory.
+- **Anti-pattern:** Do not leave multiple live dated snapshots in `.radar-suite/`. Always archive the old one before writing the new one.
+
+### End-of-run cleanup (every skill, mandatory)
+
+Before returning from any phase, every skill performs this cleanup:
+
+1. **Lint the directory:** List files in `.radar-suite/` and `.radar-suite/archive/`. Any file matching `RESUME_PHASE_*.md`, `RESUME_*.md` (except the single canonical `NEXT_STEPS.md`), or `*-v[0-9]*.md` is a stale handoff. Move it to `.radar-suite/archive/superseded/` or delete if the archive already has an identical copy.
+2. **Verify Class 1 files are in-place rewrites:** if the skill accidentally wrote `ledger-v2.yaml` or similar, that's a bug — the write should have been to `ledger.yaml`.
+3. **Verify Class 3 snapshots are singular:** at most one `*-capstone-audit.md` at the top level; older ones in `archive/superseded/`.
+4. **Ledger housekeeping check:** Count findings in `ledger.yaml` with `status: resolved` or `status: archived`. If the count exceeds 15, emit a one-line prompt:
+   ```
+   Ledger housekeeping: [N] resolved findings could be archived to .radar-suite/archive/ledger-resolved-YYYY-MM-DD.yaml. Run `/radar-suite archive` to clean up.
+   ```
+   Do NOT auto-archive. The user decides when. Archiving moves resolved/archived findings to `.radar-suite/archive/ledger-resolved-YYYY-MM-DD.yaml` and removes them from the active `ledger.yaml`, preserving only the session history summary and `next_id` counter.
+
+This cleanup takes 2-3 tool calls and prevents directory bloat across long audits.
+
+### Why this matters
+
+Without this convention, every skill improvises its own continuation pattern, and files pile up across sessions because no skill knows which files belong to another skill's purview. The user's `.radar-suite/` directory becomes unreadable within 2-3 runs, and the next session's Claude wastes context reading stale files.
+
+One canonical path per purpose, enforced by every skill at end-of-run, keeps the working directory the same size whether the audit has run once or fifty times.
 
 ---
 
@@ -460,6 +617,99 @@ Always follow with `AskUserQuestion`. Never leave blank prompt.
 
 ---
 
+## Pipeline UX Enhancements (Tier 2 and Tier 3)
+
+These enhancements apply when running multiple skills in sequence. They address the situational-awareness problems observed during the first full pipeline run.
+
+### 1. Pipeline-Level Progress Banner
+
+Emitted at every skill transition (start and completion) in Tier 2/3. Distinct from the within-skill phase banners above.
+
+**Beginner/Intermediate format:**
+```
+===============================================
+  RADAR SUITE -- Skill [N] of [M]: [skill-name]
+  Completed: [list of completed skills]
+  Running:   [current skill]
+  Remaining: [list of remaining skills]
+  Pipeline:  [N] total findings | Est. [time] remaining
+===============================================
+```
+
+**Senior/Expert format (one-liner):**
+```
+--- [skill-name] ([N]/[M]) | [N] findings | ~[time] left ---
+```
+
+### 2. Per-Skill Mini Rating Table
+
+When a skill completes inside a pipeline, it emits its standard 8-column rating table with a "PRELIMINARY" header. This table is kept in the output (not replaced by capstone). It gives users an anchor for evaluating urgency without waiting hours for the capstone report.
+
+**Header format:**
+```
+[SKILL NAME] -- Preliminary Rating Table (subject to capstone adjustment)
+```
+
+### 3. Audit-Only Statement
+
+Emitted at the start of a pipeline and at each skill transition:
+
+```
+Audit-only mode: no code changes will be made unless you approve them.
+```
+
+**Experience-level adaptation:** Senior/Expert sees this only on the first skill. Beginner/Intermediate sees it at every transition.
+
+### 4. Per-Phase Duration Estimates
+
+Each skill declares its estimated duration in the pipeline-level progress banner. Use the estimates from the orchestrator's Available Skills table:
+
+| Skill | Est. Time |
+|---|---|
+| data-model-radar | 30-60 min |
+| time-bomb-radar | 15-25 min |
+| roundtrip-radar | 20-40 min |
+| ui-path-radar | 15-30 min |
+| ui-enhancer-radar | 20-45 min |
+| capstone-radar | 15-30 min |
+
+### 5. Pre-Capstone Summary
+
+Emitted by capstone-radar before starting its own scans in Tier 3. Gives users the full picture and a decision point.
+
+```
+===============================================
+  PRE-CAPSTONE SUMMARY -- All [N] skills complete
+===============================================
+
+| Skill | Findings | Critical | High | Medium | Low |
+|---|---|---|---|---|---|
+| data-model-radar | 5 | 1 | 2 | 1 | 1 |
+| time-bomb-radar | 2 | 0 | 1 | 1 | 0 |
+| ... | | | | | |
+| TOTAL | [N] | [N] | [N] | [N] | [N] |
+
+Top findings by urgency:
+  RS-002 (cascade delete crash) -- CRITICAL
+  RS-014 (force unwrap in backup) -- HIGH
+  RS-019 (spacing in settings) -- LOW
+  ...
+
+Review before capstone grading? [Enter to continue / Review details]
+```
+
+### 6. Finding IDs Always Include Short Title
+
+Every reference to a finding ID in any output (banners, tables, summaries, ledger display) MUST include the `short_title` in parentheses:
+
+```
+RS-002 (cascade delete crash)
+```
+
+**Fallback:** If `short_title` is absent (legacy findings), use the first 8 words of `description`.
+
+---
+
 ## Issue Rating Table Format
 
 **8 columns required (no exceptions):**
@@ -528,11 +778,21 @@ Rules:
 - For code-only findings (⚪ LOW), use "Developer experience" instead.
 - Order matches the table. Place after the table, before the next-step suggestion.
 - Default is off. The table is the primary output; explanations are supplementary.
-- **Precedence (highest to lowest):** explicit `--no-explain` flag · explicit `--explain` flag · CLAUDE.md `explain-findings` · Beginner-experience auto-enablement.
 
 ---
 
 ## Handoff YAML Schema (common fields)
+
+> **Axis classification — radar-suite only, not workflow-audit.** The requirement below
+> depends on `skills/radar-suite-axis-classification/SKILL.md`, which ships with radar-suite
+> and is not part of workflow-audit. When running as workflow-audit, use the handoff schema
+> defined in workflow-audit's own SKILL.md (`category`, `urgency`, `risk_fix`, `risk_no_fix`,
+> `roi`, `blast_radius`, `fix_effort`, `files`, `suggested_fix`) and do not apply the axis
+> schema gate — it would reject every finding for missing fields this skill never collects.
+> If radar-suite is installed alongside and you are running one of its radars, the rule below
+> applies as written.
+>
+> **Axis classification (MANDATORY as of v1.1, radar-suite skills):** Every finding must include an `axis` label and the coaching fields (`before_after_experience`, `current_approach`, `suggested_fix`, `better_approach`, `better_approach_tradeoffs`, `verification_log`). See `skills/radar-suite-axis-classification/SKILL.md` for the full framework, schema gate rules, and invocation protocol. A finding missing any mandatory coaching field, or whose `better_approach` lacks a file:line citation backed by a `pattern_citation_lookup` verification_log entry, is REJECTED by the schema gate.
 
 ```yaml
 # .radar-suite/[skill]-handoff.yaml
@@ -549,6 +809,14 @@ domains_audited: [count]
 domains_clean: [count]
 overall_grade: [A-F or null if incomplete]
 
+# Axis summary (populated by every radar as of v1.1)
+axis_summary:
+  axis_1_bug: [count]              # real user-facing bugs
+  axis_2_scatter: [count]          # correct code, reorganize only
+  axis_3_dead_code: [count]        # unreachable branches
+  axis_3_smelly: [count]           # reachable but poorly justified
+  rejected_no_citation: [count]    # findings dropped at the schema gate for missing coaching
+
 # Cross-skill suspects (for downstream skills to investigate)
 suspects:
   - file: [path]
@@ -559,9 +827,10 @@ suspects:
 # Findings with enhanced fields
 findings:
   - id: [unique-hash]
+    short_title: [max 8 words, human-scannable label]  # REQUIRED as of v2.1
     description: [plain language]
     confidence: verified|probable|possible
-    urgency: critical|high|medium|low
+    urgency: critical|high|medium|low  # axis_1 uses 4-tier; axis_2/3 use hygiene scale (urgent|rolling|backlog)
     status: open|fixed|deferred|accepted
     file: [path]
     line: [number]
@@ -576,6 +845,62 @@ findings:
     fix_applied: [description of fix if status=fixed]
     test_added: [test file path if applicable]
 
+    # Bug-echo handoff fields (optional — see Bug-Echo Handoff section)
+    pathway: [one-line string identifying the anti-pattern shape, e.g.
+              "worker endpoint /ai/identify, AIVideoResponse JSON shape" or
+              "missing [weak self] in Task closures within ViewModels".
+              Omit when finding is structural (test coverage, dead end, naming).
+              Used by capstone to decide whether to prompt a bug-echo sweep.]
+    bug_echo_status: pending|completed|declined|none|suppressed
+                     # pending: pathway present, not yet prompted
+                     # completed: bug-echo run, results in echo_result
+                     # declined: user said no at Fixed-transition prompt
+                     # none: no pathway (structural finding)
+                     # suppressed: skip-all-session was active when Fixed transition occurred
+    echo_result: [free-form string written by capstone after bug-echo runs,
+                  e.g. "2 siblings fixed at File.swift:120, Other.swift:45"
+                  or "no siblings found" or "declined"]
+
+    # ========================================================================
+    # AXIS CLASSIFICATION FIELDS (MANDATORY as of v1.1)
+    # See skills/radar-suite-axis-classification/SKILL.md for full spec
+    # ========================================================================
+
+    axis: axis_1_bug | axis_2_scatter | axis_3_dead_code | axis_3_smelly  # REQUIRED
+
+    before_after_experience:
+      audience: end_user | code_reader | future_maintainer  # REQUIRED (defaults by axis)
+      before: "Concrete description of current experience from the named audience's POV"
+      after: "Concrete description after the fix, same audience"
+
+    current_approach: |   # REQUIRED
+      How the code is structured today. Specific file:line references.
+    suggested_fix: |      # REQUIRED
+      The minimum change that addresses the immediate finding.
+    better_approach: |    # REQUIRED — MUST cite existing pattern by file:line
+      How a senior reviewer would write this beyond the minimum fix.
+      Format: "Follow the pattern at [File.swift:NN] which [...]."
+      A better_approach without a file:line citation is REJECTED by the schema gate.
+    better_approach_tradeoffs: |   # REQUIRED — both "when to apply" and "when not to apply"
+      Honest tradeoffs. When the better approach is overkill vs when it is the right call.
+
+    verification_log:     # REQUIRED — pattern_citation_lookup entry is mandatory
+      - check: reachability_trace | whole_file_scan | branch_enumeration | pattern_citation_lookup | source_root_introspection
+        result: "concrete outcome of the check"
+
+# Checks performed (MANDATORY as of v1.1 — replaces silent absence of failure)
+checks_performed:
+  source_roots_scanned: [list of source root paths]
+  files_scanned: [count]
+  patterns_checked:
+    - reachability_trace
+    - whole_file_scan
+    - branch_enumeration
+    - pattern_citation_lookup
+    - source_root_introspection
+  patterns_not_run: []                # empty if all checks ran
+  reason_for_skipped_checks: null     # document why any check was skipped
+
 # Session metadata
 context_exhaustion_after: [N or null]
 tool_calls: [count]
@@ -584,11 +909,148 @@ accepted_risks_suppressed: [count]
 intentional_suppressed: [count]  # known-intentional entries that filtered findings
 ```
 
+### Schema Gate Rules (enforced before finding emission)
+
+> **radar-suite only.** All six rules below key off the axis/coaching fields, which
+> workflow-audit does not collect — applying them as written would reject every
+> workflow-audit finding. The workflow-audit equivalent is narrower and lives in its own
+> SKILL.md: a finding is not emitted unless it cites a real `file:line` you actually read
+> (the Work Receipts rule). That citation requirement is the part that matters — it is what
+> stops an audit from asserting a problem nobody verified.
+
+A finding is REJECTED (not emitted) if any of these apply:
+
+1. `axis` field is missing or not one of the four valid values
+2. `before_after_experience` is missing or any sub-field is empty
+3. `current_approach`, `suggested_fix`, or `better_approach` is missing or empty
+4. `better_approach` does not contain a file:line citation (regex: `[A-Za-z0-9_/+.-]+\.swift:\d+`)
+5. `verification_log` is missing or does not contain a `pattern_citation_lookup` entry
+6. `better_approach_tradeoffs` does not contain both a "when to apply" and a "when not to apply" sentence
+
+**When rejected:** the radar either (a) fills the missing fields and retries, or (b) downgrades confidence to `possible`, marks it `coaching incomplete`, and increments `rejected_no_citation` in the handoff. It is NEVER silently dropped.
+
+### Severity Scale by Axis
+
+| Axis | Severity scale | Grade impact |
+|---|---|---|
+| axis_1_bug | 4-tier (critical, high, medium, low) | Counts toward fix-before-shipping grade |
+| axis_2_scatter | Hygiene (urgent_hygiene, rolling_hygiene, backlog_hygiene) | None — hygiene backlog only |
+| axis_3_dead_code | Hygiene | None |
+| axis_3_smelly | Hygiene | None |
+
+Both scales may coexist in the same handoff. Capstone splits by `axis`, not by severity value.
+
+### Audience Defaults by Axis
+
+| Axis | Default audience | Override when |
+|---|---|---|
+| axis_1_bug | end_user | Developer-facing bug (crash on debug path, build-time error) → code_reader |
+| axis_2_scatter | code_reader | Observable user lag from bundle size / view churn → end_user |
+| axis_3_dead_code | future_maintainer | Hygiene issue a reviewer would catch in next PR → code_reader |
+| axis_3_smelly | future_maintainer | Same → code_reader |
+
 **Cross-skill handoff rules:**
 1. data-model-radar → roundtrip-radar: Pass `suspects` for serialization gaps
 2. roundtrip-radar → capstone-radar: Pass workflow-level findings
 3. ui-path-radar → ui-enhancer-radar: Pass dead-end views for visual audit
-4. All → capstone-radar: Pass `overall_grade` for aggregation
+4. All → capstone-radar: Pass `overall_grade` AND `axis_summary` for aggregation
+5. All → capstone-radar: Pass `checks_performed` for audit-coverage reporting
+
+---
+
+## Bug-Echo Handoff (cross-skill nudge)
+
+When a finding moves from `status: open` to `status: fixed` in the ledger, the fix may have siblings — other instances of the same anti-pattern elsewhere in the codebase. The bug-echo skill (separate repo: `Terryc21/bug-echo`) is designed for exactly this sweep. This section defines how radar-suite *prompts* the user to run bug-echo at the right moment, without invoking bug-echo programmatically.
+
+**Why a handoff and not direct invocation:** bug-echo's contract is reactive — it accepts a seed bug, infers the anti-pattern, validates against the pre-fix file, and scans for siblings. The seed shape is still settling; programmatic integration would lock in a contract we haven't stress-tested. The handoff is a workflow nudge: capstone prompts at Fixed-transition, the user runs `/skill bug-echo` manually, results are annotated back into the ledger.
+
+### The Pathway Gate
+
+A finding has *pathway shape* if the user can name ONE of:
+
+1. A worker endpoint, prompt template, or response JSON shape (AI Backend bugs)
+2. A SwiftData `@Model` property or relationship (data-model bugs)
+3. A fix-site code pattern that generalizes (e.g., "missing `[weak self]` in Task closures within ViewModels", "`try?` swallowing in error paths")
+4. A UI component type with a defined fix recipe (e.g., "Toolbar Done buttons on iOS-only", "Sheet without `.iPadPageSheet()`")
+
+A finding does NOT have pathway shape if it is:
+
+1. "Missing test coverage for X" — no pattern, just a coverage gap
+2. "This UI flow has a dead end" — structural, not a code pattern
+3. "Naming is inconsistent" — convention, not anti-pattern
+4. "Feature is undocumented" — meta, not code
+
+**Discipline (MANDATORY for all 5 companion radars):** At finding-emission time (not at Fixed time), fill the `pathway` field if and only if the finding meets the yes-shape criteria above. Leave empty for structural findings. The auditor who created the finding knows the shape; the auditor who marks it Fixed weeks later does not. Filling `pathway` at Open-time is load-bearing.
+
+### Capstone Prompt Trigger
+
+Capstone-radar owns the prompt. When capstone observes a finding move from `status: open` to `status: fixed` (during its own Fixed transitions in Step 10, or when consuming a companion handoff that contains a Fixed transition):
+
+1. Read the finding's `pathway` field.
+2. If `pathway` is empty: set `bug_echo_status: none`. Continue.
+3. If `pathway` is non-empty AND `bug_echo_status` is unset/`pending`:
+   - Check session state for `bug_echo_suppress_session` flag.
+   - If suppressed: set `bug_echo_status: suppressed`. Continue.
+   - Otherwise: emit the prompt below.
+4. If `bug_echo_status` is already `completed`/`declined`/`none`/`suppressed`: skip (this finding has been handled).
+
+**Prompt format:**
+
+```
+RS-NNN (short_title) — moved to Fixed
+
+  Pathway: <pathway field text>
+
+  Run bug-echo to scan for siblings?
+  1. Yes — describe how to invoke bug-echo with this seed
+  2. No — log decline
+  3. Skip all bug-echo prompts this session
+```
+
+**Response handling:**
+
+- **1 (Yes):** Print the manual invocation hint:
+  ```
+  Run: /skill bug-echo
+  Seed: RS-NNN
+  Pathway: <pathway field text>
+  Fix-site: <file:line from finding>
+
+  When bug-echo finishes, return the result line and I'll annotate RS-NNN.
+  ```
+  Set `bug_echo_status: pending` (waiting for user to paste results).
+  When the user returns with results, write to `echo_result` and update `bug_echo_status: completed`. Also write a `**Echo:** <result>` line to the finding's Detail block in any rendered table.
+
+- **2 (No):** Set `bug_echo_status: declined`. Write `**Echo:** declined` to Detail block. Continue.
+
+- **3 (Skip all):** Set session flag `bug_echo_suppress_session: true` in `.radar-suite/session-prefs.yaml` (not persisted across sessions — resets next radar-suite invocation). Set this finding's `bug_echo_status: suppressed`. All subsequent Fixed transitions in this session skip the prompt silently.
+
+### Detail Block Rendering
+
+When capstone (or any radar) renders a finding's Detail block, include these lines when present:
+
+```
+**Pathway:** worker endpoint /ai/identify, AIVideoResponse JSON shape
+**Echo:** 2 siblings fixed at File.swift:120, Other.swift:45
+```
+
+Omit both lines when their fields are empty. The `**Echo:**` line replaces an inline Status-column annotation (the Status column stays at `Fixed`, the echo provenance lives in Detail).
+
+### Manual Trigger
+
+Users can manually trigger the bug-echo prompt for any finding via the suite-level command:
+
+```
+/radar-suite bug-echo RS-NNN
+```
+
+This bypasses the Fixed-transition gate (works on findings still Open, or on findings where `bug_echo_status` was previously `declined`/`suppressed`). Useful when the user realizes after the fact that a finding warrants a sibling sweep.
+
+### What this section does NOT do
+
+- It does NOT invoke bug-echo programmatically. The user runs `/skill bug-echo` themselves.
+- It does NOT define bug-echo's own contract (seed shape, output format). Those live in the bug-echo repo.
+- It does NOT block status transitions. A user who declines bug-echo still has a Fixed finding; nothing is gated on echo results.
 
 ---
 

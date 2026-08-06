@@ -148,7 +148,7 @@ Audits only that path. Faster than the full discovery layer; useful when a teste
 
 Every audit writes a markdown report to `.agents/research/YYYY-MM-DD-workflow-audit-<slug>.md`. Standard format across the radar/audit ecosystem:
 
-- File and line citations for every finding (the schema gate rejects unattributed claims)
+- File and line citations for every finding — a finding is not emitted unless it cites a location the audit actually read, so the report can't assert a problem nobody verified
 - 8-column rating table: #, finding, urgency, risk-of-fix, risk-of-no-fix, ROI, blast radius, fix effort (status column added on re-displays)
 - Suggested fix when one is mechanical
 

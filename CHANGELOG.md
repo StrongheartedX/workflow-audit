@@ -4,6 +4,33 @@ All notable changes to workflow-audit are documented here.
 
 ---
 
+## 2026-08-06 — v3.0.2
+
+Core sync. `radar-suite-core.md` had been forked in May and was 427 lines behind the
+canonical copy in radar-suite, which meant this skill was missing shared behavior it
+already claimed to inherit.
+
+- **Synced `radar-suite-core.md` from radar-suite** (660 → 1,122 lines, 32 sections gained):
+  Artifact Lifecycle, Checks-performed reporting, Finding IDs with short titles, Detail
+  Block Rendering, Pipeline UX, Severity Scale by Axis, and others. workflow-audit's two
+  local adaptations were preserved: the `.radar-suite/` → `.workflow-audit/` path-substitution
+  header and the Opt-Out section.
+- **Scoped two imported mandates that would have broken a standalone run.** The synced file
+  requires an `axis` label plus six coaching fields on every finding, enforced by a schema
+  gate whose six rules all key off those fields — and points at
+  `skills/radar-suite-axis-classification/SKILL.md`, which ships with radar-suite, not here.
+  Applied as written it would have rejected every workflow-audit finding. Both sections are
+  now marked radar-suite-only, with workflow-audit's own handoff schema and the Work Receipts
+  citation rule named as the equivalent.
+- **Corrected a README claim.** The output-format section said "the schema gate rejects
+  unattributed claims." That gate is radar-suite's and doesn't apply here. The line now
+  describes what workflow-audit actually enforces: a finding isn't emitted unless it cites a
+  location the audit read.
+- **Header notes that sibling radar skills** named throughout the core file apply only when
+  radar-suite is installed alongside; workflow-audit runs standalone without them.
+
+---
+
 ## 2026-08-06 — v3.0.1
 
 Portability and correctness fixes, found by running the skill against a real SwiftUI

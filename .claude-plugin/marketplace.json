@@ -9,7 +9,7 @@
     {
       "name": "workflow-audit",
       "description": "2-skill audit pipeline: workflow-audit + plan",
-      "version": "3.0.1",
+      "version": "3.0.2",
       "author": {
         "name": "Terry Nyberg"
       },
