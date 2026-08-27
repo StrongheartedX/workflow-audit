@@ -16,9 +16,11 @@
 >
 > ⚠️ **This is a deliberate fork, not a copy.** Upstream is
 > `radar-suite/skills/ui-path-radar/radar-suite-core.md`. This copy intentionally differs
-> in three places — the header above, the two "radar-suite only, not workflow-audit"
-> exemptions (axis classification and the finding-emission rules that key off it), and the
-> `## Opt-Out` section at the end. Everything else should track upstream.
+> in four places — the header above, the two "radar-suite only, not workflow-audit"
+> exemptions (axis classification and the finding-emission rules that key off it), the
+> `## Opt-Out` section at the end, and the **Dirty-tree guard** under Wave-Based Fix
+> Presentation (added here 2026-08-27; worth adopting upstream, since every radar skill that
+> holds `Edit` has the same exposure). Everything else should track upstream.
 >
 > **Before editing, diff against upstream.** Drift here is silent: on 2026-08-13 an upstream
 > correction to the Q2/Q3 setup questions never reached this file, and workflow-audit went on
@@ -443,6 +445,70 @@ Options:
 **When FIX_MODE = "Batch mode":** Apply all unless user objects within 5 seconds (print countdown).
 
 **When FIX_MODE = "Auto-fix safe":** Auto-apply if ALL items in wave have Blast Radius ≤ 2 files AND Fix Effort = Trivial/Small.
+
+### Dirty-tree guard (MANDATORY — before the FIRST auto-applied edit of a session)
+
+🛑 **Never auto-apply an edit on top of uncommitted work.** This skill holds `Edit` and `Write`,
+and "fix it and tell me" is the recommended default, so a user who has not committed can end up
+with the skill's edits interleaved with their own — and no way to separate them.
+
+Before the first auto-applied edit in a session, check the working tree:
+
+```bash
+git status --porcelain 2>/dev/null
+```
+
+| Result | Do this |
+|---|---|
+| Empty output | Proceed. `git diff` cleanly shows what the skill changed. |
+| Any output | **Do not auto-apply.** Report the finding, downgrade this session to per-item approval, and say why. |
+| Not a git repo (non-zero exit) | **Do not auto-apply.** No undo exists at all here. Per-item approval for the session. |
+
+When the tree is dirty, say this once and continue the audit normally:
+
+> You have uncommitted changes, so I'm not applying fixes automatically — my edits would mix
+> with yours and `git diff` could not tell them apart. I'll show each fix and ask first.
+> Commit or stash, and re-run to get automatic fixes back.
+
+**The override.** A user who understands the risk can proceed anyway:
+
+```
+/workflow-audit fix --apply-anyway
+```
+
+Take it at face value and auto-apply for the session. Say once, without arguing:
+
+> Applying fixes on a dirty tree at your request. `git diff` will show my changes mixed with
+> yours.
+
+Honour it the same way when the user says it in words ("apply anyway", "go ahead, I know").
+Do not re-ask, and do not require it to be repeated per wave.
+
+**Rules:**
+- Check **once per session**, before the first auto-applied edit — not per wave, and not on runs
+  that apply nothing.
+- The downgrade lasts the session. Do not re-prompt after each wave.
+- This gate is **independent of** the blast-radius gate above; both must pass to auto-apply.
+  `--apply-anyway` waives only this one — the blast-radius gate still holds.
+- It never blocks the audit. Findings, reports, and per-item approval all work unchanged — the
+  only thing withheld is *unattended* editing.
+- **If `git status` errors or hangs**, treat it as dirty and downgrade. Never block the audit
+  waiting on it.
+- Untracked build artefacts (`.DS_Store`, logs, derived data) count as dirty under
+  `--porcelain`. That is deliberate: distinguishing "harmless untracked file" from "new source
+  file I have not committed" is not something this check can do reliably, and the override
+  exists for exactly this case.
+
+**Relationship to Fix-Forward Bias (below).** That section says default to fixing rather than
+deferring, and it is right. This guard does not defer anything — every finding is still reported
+and still fixable; only *unattended* application pauses. On a dirty tree the recommended option
+becomes "show me each fix," not "skip it." If you find yourself downgrading a user to a backlog,
+you are applying this wrong.
+
+*Why this exists: the blast-radius gate bounds how much a single wave changes, but nothing bounded
+the user's ability to undo it. A clean tree makes `git diff` a complete record of the skill's work;
+a dirty one makes it unreadable. (Added 2026-08-27 after a review found `Edit`/`Write` granted with
+no pre-edit safety anywhere in the skill.)*
 
 ---
 

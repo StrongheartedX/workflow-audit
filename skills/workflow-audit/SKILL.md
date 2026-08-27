@@ -38,6 +38,7 @@ Layer 1 is the exception, by design. Its output is an *inventory* of entry point
 | `/workflow-audit trace "A → B → C"` | Trace a specific user flow path |
 | `/workflow-audit diff` | Compare current findings against previous audit |
 | `/workflow-audit fix` | Generate fixes for found issues |
+| `/workflow-audit fix --apply-anyway` | Same, but auto-apply even with uncommitted changes |
 | `/workflow-audit status` | Show audit progress and remaining issues |
 
 ## Overview
@@ -273,6 +274,14 @@ Compare current codebase against the previous audit to show what changed:
 1. Read `layer3-results.yaml` and `layer5-data-wiring.yaml` for unfixed issues
 2. Generate specific code fixes following the patterns in examples/
 3. Prioritize by severity (critical first)
+
+🛑 **Before applying anything automatically, run the dirty-tree guard** in
+`radar-suite-core.md` § Dirty-tree guard. A dirty working tree downgrades this run to per-item
+approval — the audit continues normally, only unattended editing is withheld. Both gates must
+pass to auto-apply: blast radius ≤ 2 files AND a clean tree.
+
+`/workflow-audit fix --apply-anyway` waives the tree check for users who accept the risk. It
+does not waive the blast-radius gate.
 
 ### If "status":
 1. Read existing audit files
