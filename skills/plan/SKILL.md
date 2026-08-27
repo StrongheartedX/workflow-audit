@@ -55,7 +55,7 @@ If "Commit first": Ask for a commit message, stage changed files, and commit. Th
 >
 > A plan task does NOT say: "Add `.onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder)...) }`"
 >
-> **Exception:** Include code (≤10 lines) ONLY when referencing an existing pattern in the repo, showing a required API signature, or documenting a known framework gotcha. See [examples.md](examples.md) for calibration.
+> **Exception:** Include code (≤10 lines) ONLY when referencing an existing pattern in the repo, showing a required API signature, or documenting a known framework gotcha. The two worked examples at the end of this file show the calibration.
 
 ## Step 1: Mode Detection
 

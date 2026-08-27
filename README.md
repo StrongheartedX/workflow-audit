@@ -84,6 +84,24 @@ Five passes, each runnable on its own:
 
 ---
 
+## Then: what to do about it
+
+The plugin installs a second skill. When an audit finishes, it hands its findings over:
+
+```
+/plan --workflow-audit
+```
+
+You get an ordered plan — what to fix first, what each phase costs, what could break, how
+you'd test it, and how you'd undo it. It says *what* and *where*, never *how*: a task points
+at `AddItemView.swift:45-80` and says when it's done, rather than handing you code to paste.
+
+It works without an audit too — point it at a codebase report, or just describe the work.
+
+**[More on planning →](USING.md#turning-findings-into-a-plan)**
+
+---
+
 ## Alongside your linter, not instead of it
 
 A linter checks whether each file is written correctly — cheap, fast, on every save. Keep it.

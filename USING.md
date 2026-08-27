@@ -10,6 +10,7 @@ for when you want the detail.
 - [Other commands](#other-commands)
 - [Running less than the whole thing](#running-less-than-the-whole-thing)
 - [The report](#the-report)
+- [Turning findings into a plan](#turning-findings-into-a-plan)
 - [Using it without Claude Code](#using-it-without-claude-code)
 - [Pairing with ui-path-radar](#pairing-with-ui-path-radar)
 
@@ -135,6 +136,47 @@ Written to `.agents/research/YYYY-MM-DD-workflow-audit-<slug>.md`.
 stack vertically, which is hard to scan. GitHub, GitLab, VS Code's preview, Obsidian, Typora,
 Bear, MacDown, iA Writer, and Marked 2 all render it properly. If a table looks broken in a
 terminal, the file is fine — the window is too narrow.
+
+---
+
+## Turning findings into a plan
+
+The plugin installs **two** skills. The second one, `plan`, turns a finished audit into an
+ordered piece of work.
+
+```
+/plan --workflow-audit
+```
+
+It reads `.workflow-audit/handoff.yaml` — written when an audit completes — and produces a
+phased plan: what to do first, what each phase costs, what could go wrong, how you'd test it,
+and how you'd back it out. The plan is shown to you and saved to `.agents/research/`.
+
+Because the audit already rated every finding, `plan` uses those ratings rather than
+re-deciding them.
+
+**It says what and where, never how.** A task reads *"Add keyboard dismissal to
+AddItemView.swift:45-80. Done when: tapping outside a text field dismisses the keyboard"* —
+not a snippet to paste. Code appears only to point at a pattern already in your repo, or to
+name an API you'd otherwise have to look up.
+
+**Three ways it can start:**
+
+| Start from | When |
+|---|---|
+| A workflow audit | `.workflow-audit/handoff.yaml` exists and is under two weeks old |
+| A codebase audit | A report sits in `.agents/research/`, under two weeks old |
+| Nothing | You describe the work yourself |
+
+It picks on its own, preferring a workflow audit when both are present, and falls back to
+asking you when the newest report is over two weeks old rather than planning from stale
+findings.
+
+**It checks your git state first.** Uncommitted changes get you a prompt — commit now, or
+continue and accept that you can't cleanly revert.
+
+**On a project with no CLAUDE.md**, it takes a quick look at how your code is already written
+so the plan matches your conventions rather than inventing its own.
 
 ---
 
